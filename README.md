@@ -19,6 +19,8 @@
 ## 使用二进制文件
 可以从[Release](https://github.com/kkkgo/PaoPao-Pref/releases)下载对应平台编译好的二进制文件，压缩包内已经附带最新热门100万域名列表。
 ## 使用Docker镜像
+![pull](https://img.shields.io/docker/pulls/sliamb/paopao-pref.svg) ![size](https://img.shields.io/docker/image-size/sliamb/paopao-pref)   
+![Docker Platforms](https://img.shields.io/badge/platforms-linux%2F386%20%7C%20linux%2Famd64%20%7C%20linux%2Farm%2Fv6%20%7C%20linux%2Farm%2Fv7%20%7C%20linux%2Farm64%2Fv8%20%7C%20linux%2Fppc64le%20%7C%20linux%2Friscv64%20%7C%20linux%2Fs390x-blue)
 ```shell
 # 帮助信息
 docker run --rm -it sliamb/paopao-pref -h
