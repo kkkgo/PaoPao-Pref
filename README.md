@@ -40,4 +40,6 @@ PaoPaoDNS：4核心8G内存
 `used_memory_human:1.06G`
 
 ## 附录
-域名数据来源： https://s3-us-west-1.amazonaws.com/umbrella-static/index.html   
+域名数据来源： https://s3-us-west-1.amazonaws.com/umbrella-static/index.html     
+PaoPao DNS Docker： https://github.com/kkkgo/PaoPaoDNS   
+搭建属于自己的递归DNS：  https://blog.03k.org/post/paopaodns.html
