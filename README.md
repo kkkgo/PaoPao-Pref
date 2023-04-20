@@ -32,7 +32,7 @@ docker run --rm -it sliamb/paopao-pref -line 1000 -server 192.168.1.8
 docker run --rm -it sliamb/paopao-pref -limit 5 -server 192.168.1.8
 ```
 ## 测试数据参考
-PaoPaoDNS：4核心8G内存   
+PaoPaoDNS：4核心8G内存/`CNAUTO=yes`/`IPV6=yes`/`CNFALL=no`   
 并发：10   
 域名数据：100万  
 运行耗时：39小时   
