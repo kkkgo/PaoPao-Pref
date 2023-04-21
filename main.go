@@ -143,6 +143,7 @@ func nslookup(domain string) {
 		return
 	}
 	if verbose {
+		fmt.Println("\n===========================================\nnslookup", domain)
 		fmt.Println(string(out))
 	}
 }
