@@ -2,26 +2,33 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
+	"net"
 	"os"
-	"os/exec"
 	"os/signal"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 var (
-	file    string
-	limit   int
-	line    int
-	count   int64
-	total   int64
-	wg      sync.WaitGroup
-	help    bool
-	verbose bool
-	server  string
+	file     string
+	limit    int
+	line     int
+	count    int64
+	succ     int64
+	total    int64
+	wg       sync.WaitGroup
+	help     bool
+	verbose  bool
+	server   string
+	port     int
+	output   bool
+	timeout  time.Duration
+	resolver *net.Resolver
 )
 
 func init() {
@@ -31,6 +38,8 @@ func init() {
 	flag.BoolVar(&verbose, "v", false, "output nslookup results")
 	flag.BoolVar(&help, "h", false, "show help information")
 	flag.StringVar(&server, "server", "", "DNS server to use")
+	flag.DurationVar(&timeout, "timeout", time.Second*5, "Query timeout")
+	flag.IntVar(&port, "port", 53, "DNS port")
 	flag.Parse()
 }
 
@@ -38,6 +47,46 @@ func main() {
 	if help {
 		flag.Usage()
 		os.Exit(0)
+	}
+	if server == "" {
+		server = os.Getenv("DNS_SERVER")
+	}
+	if envPort, ok := os.LookupEnv("DNS_PORT"); ok {
+		if p, err := strconv.Atoi(envPort); err == nil {
+			port = p
+		}
+	}
+	if envLine, ok := os.LookupEnv("DNS_LINE"); ok {
+		if li, err := strconv.Atoi(envLine); err == nil {
+			line = li
+		}
+	}
+	if envLimit, ok := os.LookupEnv("DNS_LIMIT"); ok {
+		if lim, err := strconv.Atoi(envLimit); err == nil {
+			limit = lim
+		}
+	}
+	if envTimeout, ok := os.LookupEnv("DNS_TIMEOUT"); ok {
+		if t, err := time.ParseDuration(envTimeout); err == nil {
+			timeout = t
+		}
+	}
+	if os.Getenv("FILE_OUTPUT") == "yes" {
+		output = true
+	}
+	if os.Getenv("DNS_LOG") == "yes" {
+		verbose = true
+	}
+	if server != "" {
+		resolver = &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{}
+				return d.DialContext(ctx, network, net.JoinHostPort(server, strconv.Itoa(port)))
+			},
+		}
+	} else {
+		resolver = net.DefaultResolver
 	}
 	start := time.Now()
 	var elapsed float64
@@ -67,6 +116,7 @@ func main() {
 		dnsserver = server
 	}
 	fmt.Println("DNS Server:", dnsserver)
+	fmt.Println("DNS Port:", port)
 	f.Seek(0, 0)
 	if line > 0 {
 		fmt.Println("Test :", line, "~", total)
@@ -92,7 +142,7 @@ func main() {
 			}
 			domain := scanner.Text()
 			ch <- domain
-			fmt.Printf("\rProcessed %d/%d domains[%.4f%%]. Average time: %.2f seconds. Estimated total time: %s.", count, total, 100*float64(count)/float64(total), average, formatDuration(estimate))
+			fmt.Printf("\rProcessed %d/%d domains[%.4f%%]. Success rate:%.4f%%. Average time: %.6f seconds. Estimated total time: %s.", count, total, 100*float64(count)/float64(total), 100*float64(succ)/float64(count), average, formatDuration(estimate))
 		}
 		if err := scanner.Err(); err != nil {
 			fmt.Println(err)
@@ -105,14 +155,16 @@ func main() {
 			defer wg.Done()
 			for domain := range ch {
 				now := time.Now()
-				nslookup(domain)
+				if nslookup(domain) {
+					atomic.AddInt64(&succ, 1)
+				}
 				atomic.AddInt64(&count, 1)
 				elapsed = now.Sub(start).Seconds()
 				if count > 0 {
 					average = elapsed / float64(count)
 					estimate = float64(total-count) * average
 				}
-				fmt.Printf("\rProcessed %d/%d domains[%.4f%%]. Average time: %.2f seconds. Estimated total time: %s.", count, total, 100*float64(count)/float64(total), average, formatDuration(estimate))
+				fmt.Printf("\rProcessed %d/%d domains[%.4f%%]. Success rate:%.4f%%. Average time: %.6f seconds. Estimated total time: %s.", count, total, 100*float64(count)/float64(total), 100*float64(succ)/float64(count), average, formatDuration(estimate))
 			}
 		}()
 	}
@@ -129,24 +181,24 @@ func main() {
 	}
 }
 
-func nslookup(domain string) {
-	var cmd *exec.Cmd
-	if server == "" {
-		cmd = exec.Command("nslookup", domain)
-	} else {
-		cmd = exec.Command("nslookup", domain, server)
-	}
-	out, err := cmd.Output()
+func nslookup(domain string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	r, err := resolver.LookupIPAddr(ctx, domain)
 	if err != nil {
 		if verbose {
-			fmt.Println(err)
+			fmt.Printf("\n\033[33m%s\033[0m\n", err)
 		}
-		return
+		return false
 	}
 	if verbose {
-		fmt.Println("\n===========================================\nnslookup", domain)
-		fmt.Println(string(out))
+		fmt.Printf("\n\033[31m%s\033[0m\033[32m%s\033[0m\n", domain, r)
 	}
+	if output {
+		appendToFile(domain)
+	}
+	return true
+
 }
 
 func wait(wg *sync.WaitGroup) chan struct{} {
@@ -162,4 +214,15 @@ func formatDuration(seconds float64) string {
 	minutes := int((seconds - float64(hours)*3600) / 60)
 	seconds = seconds - float64(hours)*3600 - float64(minutes)*60
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, int(seconds))
+}
+func appendToFile(content string) {
+	f, err := os.OpenFile("domains_ok.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+
+	if _, err = f.WriteString(content + "\n"); err != nil {
+		fmt.Println(err)
+	}
 }
