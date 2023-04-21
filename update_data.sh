@@ -10,4 +10,7 @@ export DNS_LIMIT=100
 touch domains_ok.txt
 chmod +x ./paopao-pref
 ./paopao-pref
+count=$(cat domains_ok.txt|wc -l)
+if [ "$count" -gt 100000 ];then
 mv domains_ok.txt domains.txt
+fi
