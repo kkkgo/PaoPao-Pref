@@ -142,7 +142,7 @@ func main() {
 			}
 			domain := scanner.Text()
 			ch <- domain
-			fmt.Printf("\rProcessed %d/%d domains[%.4f%%]. Success rate:%.4f%%. Average time: %.6f seconds. Estimated total time: %s.", count, total, 100*float64(count)/float64(total), 100*float64(succ)/float64(count), average, formatDuration(estimate))
+			fmt.Printf("\rNslookup %d/%d domains[%.4f%%]. Succ rate:%.2f%%. Avg time: %.6f seconds. Est time: %s.", count, total, 100*float64(count)/float64(total), 100*float64(succ)/float64(count), average, formatDuration(estimate))
 		}
 		if err := scanner.Err(); err != nil {
 			fmt.Println(err)
@@ -164,7 +164,7 @@ func main() {
 					average = elapsed / float64(count)
 					estimate = float64(total-count) * average
 				}
-				fmt.Printf("\rProcessed %d/%d domains[%.4f%%]. Success rate:%.4f%%. Average time: %.6f seconds. Estimated total time: %s.", count, total, 100*float64(count)/float64(total), 100*float64(succ)/float64(count), average, formatDuration(estimate))
+				fmt.Printf("\rNslookup %d/%d domains[%.4f%%]. Succ rate:%.2f%%. Avg time: %.6f seconds. Est time: %s.", count, total, 100*float64(count)/float64(total), 100*float64(succ)/float64(count), average, formatDuration(estimate))
 			}
 		}()
 	}
