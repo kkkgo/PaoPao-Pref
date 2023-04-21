@@ -1,6 +1,6 @@
 # PaoPao-Pref
 ## 简介
-这是一个让DNS服务器预读取缓存或者压力测试的简单工具，配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用可以快速生成`redis_dns.rdb`缓存。从指定的文本读取域名列表并调用nslookup命令查询记录，docker镜像默认自带了全球前100万热门域名。   
+这是一个让DNS服务器预读取缓存或者压力测试的简单工具，配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用可以快速生成`redis_dns.rdb`缓存。从指定的文本读取域名列表并调用nslookup命令查询记录，docker镜像默认自带了全球前100万热门域名(经过无效域名筛选)。   
 ## 警告
 - 测试可能会对你的网络造成负担，请避免在网络正常使用时段进行测试。
 - 若配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用，如果设置了`CNAUTO=yes`，测试前请务必设置PaoPaoDNS的docker镜像的环境变量`CNAUTO=yes`和`CNFALL=no`。
@@ -10,18 +10,21 @@
 参数选项|值|作用
 -|-|-|
 -file|文件路径|指定域名列表，默认值为目录下的`domains.txt`.
--limit|并发数|指定并发数，默认值为10.
 -server|DNS服务器|指定DNS服务器，默认值为空.
+-port|端口|指定DNS服务器端口，默认值为53.
+-timeout|5s|指定DNS查询超时时间，默认值为5s.
+-limit|并发数|指定并发数，默认值为10.
 -line|行数|指定从第几行开始，可用于恢复进度.
 -v|开关|输出域名的查询信息.
 -h|开关|显示帮助信息.
 
 ## 使用二进制文件
 可以从[Release](https://github.com/kkkgo/PaoPao-Pref/releases)下载对应平台编译好的二进制文件，压缩包内已经附带最新热门100万域名列表。   
-你始终可以从此链接下载最新的热门100万域名列表：https://github.com/kkkgo/PaoPao-Pref/raw/main/domains.txt   
+你始终可以从此链接下载最新的热门100万域名列表：https://github.com/kkkgo/PaoPao-Pref/raw/main/domains.txt (经过无效域名筛选)    
+
 ## 使用Docker镜像
 ![pull](https://img.shields.io/docker/pulls/sliamb/paopao-pref.svg) ![size](https://img.shields.io/docker/image-size/sliamb/paopao-pref)   
-![Docker Platforms](https://img.shields.io/badge/platforms-linux%2F386%20%7C%20linux%2Famd64%20%7C%20linux%2Farm%2Fv6%20%7C%20linux%2Farm%2Fv7%20%7C%20linux%2Farm64%2Fv8%20%7C%20linux%2Fppc64le%20%7C%20linux%2Friscv64%20%7C%20linux%2Fs390x-blue)
+![Docker Platforms](https://img.shields.io/badge/platforms-linux%2F386%20%7C%20linux%2Famd64%20%7C%20linux%2Farm%2Fv6%20%7C%20linux%2Farm%2Fv7%20%7C%20linux%2Farm64%2Fv8%20%7C%20linux%2Fppc64le%20%7C%20linux%2Friscv64%20%7C%20linux%2Fs390x-blue)   
 ```shell
 # 帮助信息
 docker run --rm -it sliamb/paopao-pref -h
@@ -32,15 +35,22 @@ docker run --rm -it sliamb/paopao-pref -line 1000 -server 192.168.1.8
 # 指定并发数为5
 docker run --rm -it sliamb/paopao-pref -limit 5 -server 192.168.1.8
 ```
+你也可以使用环境变量：   
+环境变量名|对应选项
+-|-
+DNS_SERVER|-server
+DNS_PORT|-port
+DNS_LINE|-line
+DNS_LIMIT|-limit
+DNS_TIMEOUT|-timeout
+DNS_LOG|-v,请设置为yes
+
 ## 测试数据参考
 PaoPaoDNS：4核心8G内存/`CNAUTO=yes`/`IPV6=yes`/`CNFALL=no`   
-并发：10   
-域名数据：100万  
-运行耗时：39小时   
 生成的`redis_dns.rdb`缓存文件大小：917 MB    
 `used_memory_human:1.06G`
 
 ## 附录
-域名数据来源： https://s3-us-west-1.amazonaws.com/umbrella-static/index.html     
+域名数据来源： https://s3-us-west-1.amazonaws.com/umbrella-static/index.html         
 PaoPao DNS Docker： https://github.com/kkkgo/PaoPaoDNS   
 搭建属于自己的递归DNS：  https://blog.03k.org/post/paopaodns.html
