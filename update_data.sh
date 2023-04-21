@@ -8,5 +8,6 @@ go build -ldflags "-s -w" -trimpath -o ./paopao-pref
 export FILE_OUTPUT=yes
 export DNS_LIMIT=100
 touch domains_ok.txt
-paopao-pref
+chmod +x ./paopao-pref
+./paopao-pref
 mv domains_ok.txt domains.txt
