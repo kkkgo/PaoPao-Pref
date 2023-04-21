@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -48,7 +47,7 @@ func main() {
 	f, err := os.Open(file)
 	if err != nil {
 		flag.Usage()
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
@@ -96,7 +95,7 @@ func main() {
 			fmt.Printf("\rProcessed %d/%d domains[%.4f%%]. Average time: %.2f seconds. Estimated total time: %s.", count, total, 100*float64(count)/float64(total), average, formatDuration(estimate))
 		}
 		if err := scanner.Err(); err != nil {
-			log.Println(err)
+			fmt.Println(err)
 		}
 		close(ch)
 	}()
@@ -139,7 +138,9 @@ func nslookup(domain string) {
 	}
 	out, err := cmd.Output()
 	if err != nil {
-		//log.Println(err)
+		if verbose {
+			fmt.Println(err)
+		}
 		return
 	}
 	if verbose {

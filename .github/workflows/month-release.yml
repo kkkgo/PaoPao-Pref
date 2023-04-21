@@ -17,7 +17,7 @@ jobs:
     - name: build binary
       run: sh release.sh
     - name: Set variables
-      run: echo "TAG_NAME="data"-$(date +%Y%m)" >> $GITHUB_ENV
+      run: echo "TAG_NAME="data"-$(date +%Y%m%d-%s)" >> $GITHUB_ENV
     - name: Upload files to GitHub release
       uses: svenstaro/upload-release-action@v2
       with:
