@@ -17,7 +17,8 @@
 -h|开关|显示帮助信息.
 
 ## 使用二进制文件
-可以从[Release](https://github.com/kkkgo/PaoPao-Pref/releases)下载对应平台编译好的二进制文件，压缩包内已经附带最新热门100万域名列表。
+可以从[Release](https://github.com/kkkgo/PaoPao-Pref/releases)下载对应平台编译好的二进制文件，压缩包内已经附带最新热门100万域名列表。   
+你始终可以从此链接下载最新的热门100万域名列表：https://github.com/kkkgo/PaoPao-Pref/raw/main/domains.txt   
 ## 使用Docker镜像
 ![pull](https://img.shields.io/docker/pulls/sliamb/paopao-pref.svg) ![size](https://img.shields.io/docker/image-size/sliamb/paopao-pref)   
 ![Docker Platforms](https://img.shields.io/badge/platforms-linux%2F386%20%7C%20linux%2Famd64%20%7C%20linux%2Farm%2Fv6%20%7C%20linux%2Farm%2Fv7%20%7C%20linux%2Farm64%2Fv8%20%7C%20linux%2Fppc64le%20%7C%20linux%2Friscv64%20%7C%20linux%2Fs390x-blue)
