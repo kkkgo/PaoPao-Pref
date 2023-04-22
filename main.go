@@ -109,6 +109,7 @@ func main() {
 	}
 	fmt.Println("Total Line :", total)
 	fmt.Println("Concurrency Limit:", limit)
+	fmt.Println("Timeout:", timeout)
 	var dnsserver string
 	if server == "" {
 		dnsserver = "system default"
