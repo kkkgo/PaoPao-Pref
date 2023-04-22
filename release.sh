@@ -1,4 +1,5 @@
 #!/bin/sh
+go get -u
 
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -extldflags -static -extldflags -static" -trimpath -o paopao-perf
 tar -czvf 2_linux_amd64_paopao-perf.tar.gz paopao-perf domains.txt
