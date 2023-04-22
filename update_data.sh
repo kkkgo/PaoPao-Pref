@@ -11,7 +11,7 @@ export DNS_SLEEP=0ms
 export DNS_TIMEOUT=1s
 touch domains_ok.txt
 chmod +x ./paopao-pref
-./paopao-pref
+./paopao-pref -server 1.1.1.1
 count=$(cat domains_ok.txt | wc -l)
 if [ "$count" -gt 100000 ]; then
     mv domains_ok.txt domains.txt
