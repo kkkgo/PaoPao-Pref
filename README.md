@@ -1,6 +1,6 @@
 # PaoPao-Pref
 ## 简介
-这是一个让DNS服务器预读取缓存或者压力测试的简单工具，配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用可以快速生成`redis_dns.rdb`缓存。从指定的文本读取域名列表并调用查询A/AAAA记录，docker镜像默认自带了全球前100万热门域名(经过无效域名筛选)。   
+这是一个让DNS服务器预读取缓存或者压力测试的简单工具，配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用可以快速生成`redis_dns.rdb`缓存。从指定的文本读取域名列表并查询A/AAAA记录，docker镜像默认自带了全球前100万热门域名(经过无效域名筛选)。   
 ## 警告
 - 测试可能会对你的网络造成负担，请避免在网络正常使用时段进行测试。
 - 若配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用，如果设置了`CNAUTO=yes`，测试前请务必设置PaoPaoDNS的docker镜像的环境变量`CNAUTO=yes`和`CNFALL=no`。
