@@ -2,10 +2,10 @@ FROM alpine:edge AS builder
 COPY . /src/
 WORKDIR /src
 RUN apk update && apk add go
-RUN sh /src/docker-build.sh
+RUN go build -ldflags "-s -w" -trimpath -o /paopao-pref
 FROM alpine:edge
-COPY --from=builder /cp/ /data/
-RUN mv /data/paopao-pref /usr/bin/
+COPY --from=builder /paopao-pref /usr/bin/
+ADD https://github.com/kkkgo/PaoPao-Pref/raw/main/domains.txt /data/
 WORKDIR /data/
 ENV TZ=Asia/Shanghai \
     DNS_SERVER="" \
