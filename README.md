@@ -1,6 +1,6 @@
 # PaoPao-Pref
 ## 简介
-这是一个让DNS服务器预读取缓存或者压力测试的简单工具，配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用可以快速生成`redis_dns.rdb`缓存。从指定的文本读取域名列表并调用nslookup查询记录，docker镜像默认自带了全球前100万热门域名(经过无效域名筛选)。   
+这是一个让DNS服务器预读取缓存或者压力测试的简单工具，配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用可以快速生成`redis_dns.rdb`缓存。从指定的文本读取域名列表并调用查询A/AAAA记录，docker镜像默认自带了全球前100万热门域名(经过无效域名筛选)。   
 ## 警告
 - 测试可能会对你的网络造成负担，请避免在网络正常使用时段进行测试。
 - 若配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用，如果设置了`CNAUTO=yes`，测试前请务必设置PaoPaoDNS的docker镜像的环境变量`CNAUTO=yes`和`CNFALL=no`。
@@ -49,7 +49,7 @@ DNS_LOG|-v,请设置为yes/no
 
 ## 测试指标
 程序的默认值兼顾性能比较低的设备，你可以适当调高/调低`limit`,`sleep`和`timeout`的值。    
-`Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。limit和sleep的值也会影响成功率，过高的limit或者过低的sleep值也可能会导致服务器暂时无法处理.        
+`Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。limit和sleep的值也会影响成功率，过高的limit或者过低的sleep值也可能会导致服务器暂时无法及时处理（不代表结果没有在被缓存）.        
 `Avg time`: 每个域名的查询平均处理时间。   
 `Est time`: 估计的剩余时间。   
 
