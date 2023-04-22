@@ -94,7 +94,11 @@ func main() {
 		}
 	} else {
 		fmt.Printf("\n\033[33m%s\033[0m\n", "You must specify a DNS server: -server ...")
-		os.Exit(1)
+		if output {
+			resolver = net.DefaultResolver
+		} else {
+			os.Exit(1)
+		}
 	}
 	start := time.Now()
 	var elapsed float64
