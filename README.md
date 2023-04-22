@@ -46,14 +46,14 @@ DNS_TIMEOUT|-timeout
 DNS_LOG|-v,请设置为yes
 
 ## 测试指标
-` Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。    
-`Avg time`：平均处理时间。   
+`Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。    
+`Avg time`: 平均处理时间。   
 `Est time`: 估计的剩余时间。   
 
 ## 测试数据参考
 PaoPaoDNS：4核心8G内存/`CNAUTO=yes`/`IPV6=yes`/`CNFALL=no`   
 生成的`redis_dns.rdb`缓存文件大小：917 MB    
-`used_memory_human:1.06G`
+`used_memory_human:1.06G`   
 该数据仅供大致参考，域名列表每天变化。
 
 ## 附录
