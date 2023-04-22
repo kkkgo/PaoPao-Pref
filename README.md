@@ -49,7 +49,7 @@ DNS_LOG|-v,请设置为yes/no
 
 ## 测试指标
 程序的默认值兼顾性能比较低的设备，你可以适当调高/调低`limit`,`sleep`和`timeout`的值。    
-`Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。sleep的值也会影响成功率，过高的limit或者过低的sleep值也可能会导致服务器暂时无法处理.        
+`Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。limit和sleep的值也会影响成功率，过高的limit或者过低的sleep值也可能会导致服务器暂时无法处理.        
 `Avg time`: 每个域名的查询平均处理时间。   
 `Est time`: 估计的剩余时间。   
 
