@@ -3,7 +3,7 @@ name: Release
 on:
   workflow_dispatch:
   schedule:
-    - cron: '5 04 01 * *'
+    - cron: '06 06 01 * *'
 permissions:
   contents: write
 
