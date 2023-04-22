@@ -45,7 +45,7 @@ DNS_LINE|-line
 DNS_LIMIT|-limit
 DNS_TIMEOUT|-timeout
 DNS_SLEEP|-sleep
-DNS_LOG|-v,请设置为yes
+DNS_LOG|-v,请设置为yes/no
 
 ## 测试指标
 程序的默认值兼顾性能比较低的设备，你可以适当调高/调低`limit`,`sleep`和`timeout`的值。    
