@@ -13,5 +13,6 @@ ENV TZ=Asia/Shanghai \
     DNS_LINE="" \
     DNS_LIMIT="" \
     DNS_TIMEOUT="" \
+    DNS_SLEEP="" \
     DNS_LOG=""
 ENTRYPOINT ["paopao-pref"]
