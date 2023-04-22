@@ -48,6 +48,7 @@ DNS_SLEEP|-sleep
 DNS_LOG|-v,请设置为yes
 
 ## 测试指标
+程序的默认值兼顾性能比较低的设备，你可以适当调高/调低`limit`,`sleep`和`timeout`的值。    
 `Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。sleep的值也会影响成功率，过高的limit或者过低的sleep值也可能会导致服务器暂时无法处理.        
 `Avg time`: 每个域名的查询平均处理时间。   
 `Est time`: 估计的剩余时间。   
@@ -56,7 +57,7 @@ DNS_LOG|-v,请设置为yes
 PaoPaoDNS：4核心8G内存/`CNAUTO=yes`/`IPV6=yes`/`CNFALL=no`   
 生成的`redis_dns.rdb`缓存文件大小：917 MB    
 `used_memory_human:1.06G`   
-该数据仅供大致参考，域名列表每天变化。   
+该数据仅供大致参考.     
 欢迎在[discussions](https://github.com/kkkgo/PaoPao-Pref/discussions)分享你的测试参数和测试数据~！
 
 ## 附录
