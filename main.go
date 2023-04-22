@@ -28,6 +28,7 @@ var (
 	port     int
 	output   bool
 	timeout  time.Duration
+	sleep    time.Duration
 	resolver *net.Resolver
 )
 
@@ -39,6 +40,7 @@ func init() {
 	flag.BoolVar(&help, "h", false, "show help information")
 	flag.StringVar(&server, "server", "", "DNS server to use")
 	flag.DurationVar(&timeout, "timeout", time.Second*5, "Query timeout")
+	flag.DurationVar(&sleep, "sleep", time.Millisecond*1500, "Query sleep")
 	flag.IntVar(&port, "port", 53, "DNS port")
 	flag.Parse()
 }
@@ -71,6 +73,11 @@ func main() {
 			timeout = t
 		}
 	}
+	if envSleep, ok := os.LookupEnv("DNS_SLEEP"); ok {
+		if s, err := time.ParseDuration(envSleep); err == nil {
+			sleep = s
+		}
+	}
 	if os.Getenv("FILE_OUTPUT") == "yes" {
 		output = true
 	}
@@ -86,7 +93,8 @@ func main() {
 			},
 		}
 	} else {
-		resolver = net.DefaultResolver
+		fmt.Printf("\n\033[33m%s\033[0m\n", "You must specify a DNS server: -server ...")
+		os.Exit(1)
 	}
 	start := time.Now()
 	var elapsed float64
@@ -110,6 +118,7 @@ func main() {
 	fmt.Println("Total Line :", total)
 	fmt.Println("Concurrency Limit:", limit)
 	fmt.Println("Timeout:", timeout)
+	fmt.Println("Sleep:", sleep)
 	var dnsserver string
 	if server == "" {
 		dnsserver = "system default"
@@ -156,6 +165,7 @@ func main() {
 			defer wg.Done()
 			for domain := range ch {
 				now := time.Now()
+				time.Sleep(sleep)
 				if nslookup(domain) {
 					atomic.AddInt64(&succ, 1)
 				}
