@@ -16,3 +16,4 @@ if [ "$count" -gt 100000 ]; then
 else
     rm domains_ok.txt
 fi
+rm paopao-pref
