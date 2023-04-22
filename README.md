@@ -10,10 +10,11 @@
 参数选项|值|作用
 -|-|-|
 -file|文件路径|指定域名列表，默认值为目录下的`domains.txt`.
--server|DNS服务器|指定DNS服务器，默认值为空.
+-server|DNS服务器|指定DNS服务器，必需
 -port|端口|指定DNS服务器端口，默认值为53.
--timeout|5s|指定DNS查询超时时间，默认值为5s.也可以指定单位为ms.
 -limit|并发数|指定并发数，默认值为10.
+-timeout|5s|指定DNS查询超时时间，默认值为5s.也可以指定单位为ms.
+-sleep|50ms|指定DNS查询间隔，默认值为1500ms.值越小程序请求越快.
 -line|行数|指定从第几行开始，可用于恢复进度.
 -v|开关|输出域名的查询信息.
 -h|开关|显示帮助信息.
@@ -43,18 +44,20 @@ DNS_PORT|-port
 DNS_LINE|-line
 DNS_LIMIT|-limit
 DNS_TIMEOUT|-timeout
+DNS_SLEEP|-sleep
 DNS_LOG|-v,请设置为yes
 
 ## 测试指标
-`Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。    
-`Avg time`: 平均处理时间。   
+`Succ rate`: 测试成功率。测试的域名在指定的timeout时间内无法解析或者解析错误（无有效A记录或者AAAA记录），会定义为失败。如果你把timeout定义的足够低，可以当缓存测试。sleep的值也会影响成功率，过高的limit或者过低的sleep值也可能会导致服务器暂时无法处理.        
+`Avg time`: 每个域名的查询平均处理时间。   
 `Est time`: 估计的剩余时间。   
 
 ## 测试数据参考
 PaoPaoDNS：4核心8G内存/`CNAUTO=yes`/`IPV6=yes`/`CNFALL=no`   
 生成的`redis_dns.rdb`缓存文件大小：917 MB    
 `used_memory_human:1.06G`   
-该数据仅供大致参考，域名列表每天变化。
+该数据仅供大致参考，域名列表每天变化。   
+欢迎在[discussions](https://github.com/kkkgo/PaoPao-Pref/discussions)分享你的测试参数和测试数据~！
 
 ## 附录
 域名数据来源(未处理)： https://s3-us-west-1.amazonaws.com/umbrella-static/index.html         
