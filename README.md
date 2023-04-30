@@ -4,8 +4,8 @@
 ## 警告
 - 测试可能会对你的网络造成负担，请避免在网络正常使用时段进行测试。
 - 若配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用，如果设置了`CNAUTO=yes`，测试前请务必设置PaoPaoDNS的docker镜像的环境变量`CNAUTO=yes`和`CNFALL=no`。
-- 若配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用，建议PaoPao DNS的Docker的可用内存≥6 GB，否则无法缓存所有域名。
-- 不建议设置过高的并发，可能会导致你的服务器崩溃或者DNS无法被有效缓存。
+- 不建议设置过高的并发，可能会导致你的服务器崩溃或者DNS无法被有效缓存。  
+- 若配合[PaoPaoDNS](https://github.com/kkkgo/PaoPaoDNS)使用，可以在PaoPaoDNS容器内使用`debug.sh`或者查看容器启动日志，根据你内存环境，你会看到有一个`prefPC: xx`的值，该值为本工具`-pc`参数（测试xx%的域名）的推荐值，超过该值可能无法缓存。    
 ## 命令行参数
 参数选项|值|作用
 -|-|-|
@@ -16,6 +16,7 @@
 -timeout|5s|指定DNS查询超时时间，默认值为5s.也可以指定单位为ms.
 -sleep|1500ms|指定DNS查询间隔，默认值为1500ms.值越小请求越快，性能好的可以设置0ms.
 -line|行数|指定从第几行开始，可用于恢复进度.
+-pc|百分比|指定测试前%的域名，如域名列表总数为100万，指定-pc 50则测试前50万域名.
 -v|开关|输出域名的查询信息.
 -h|开关|显示帮助信息.
 
@@ -33,8 +34,8 @@ docker run --rm -it sliamb/paopao-pref -h
 docker run --rm -it sliamb/paopao-pref -server 192.168.1.8
 # 从第1000行开始
 docker run --rm -it sliamb/paopao-pref -line 1000 -server 192.168.1.8
-# 指定并发数为5
-docker run --rm -it sliamb/paopao-pref -limit 5 -server 192.168.1.8
+# 指定并发数为25, DNS查询间隔为0ms, 查询超时1s, 前1%的热门域名
+docker run --rm -it sliamb/paopao-pref -server 10.10.10.8 -pc 1 -limit 25 -sleep 0ms -timeout 1s
 ```
 你也可以使用环境变量：   
 环境变量名|对应选项
@@ -42,6 +43,7 @@ docker run --rm -it sliamb/paopao-pref -limit 5 -server 192.168.1.8
 DNS_SERVER|-server
 DNS_PORT|-port
 DNS_LINE|-line
+DNS_PC|-pc
 DNS_LIMIT|-limit
 DNS_TIMEOUT|-timeout
 DNS_SLEEP|-sleep
@@ -58,6 +60,13 @@ PaoPaoDNS：4核心8G内存/`CNAUTO=yes`/`IPV6=yes`/`CNFALL=no`
 生成的`redis_dns.rdb`缓存文件大小：917 MB    
 `used_memory_human:1.06G`   
 该数据仅供大致参考.     
+Github Actions数据生成参数：  
+```shell
+DNS_LIMIT=25
+DNS_SLEEP=0ms
+DNS_TIMEOUT=3s
+成功率在80%
+```
 欢迎在[discussions](https://github.com/kkkgo/PaoPao-Pref/discussions)分享你的测试参数和测试数据~！
 
 ## 附录

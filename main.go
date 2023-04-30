@@ -18,6 +18,7 @@ var (
 	file     string
 	limit    int
 	line     int
+	pc       int
 	count    int64
 	succ     int64
 	total    int64
@@ -36,6 +37,7 @@ func init() {
 	flag.StringVar(&file, "file", "domains.txt", "text file containing domain names")
 	flag.IntVar(&limit, "limit", 10, "concurrency limit")
 	flag.IntVar(&line, "line", 0, "start line")
+	flag.IntVar(&pc, "pc", 0, "test percentage")
 	flag.BoolVar(&verbose, "v", false, "output nslookup results")
 	flag.BoolVar(&help, "h", false, "show help information")
 	flag.StringVar(&server, "server", "", "DNS server to use")
@@ -62,6 +64,14 @@ func main() {
 		if li, err := strconv.Atoi(envLine); err == nil {
 			line = li
 		}
+	}
+	if envPC, ok := os.LookupEnv("DNS_PC"); ok {
+		if percentage, err := strconv.Atoi(envPC); err == nil {
+			pc = percentage
+		}
+	}
+	if pc <= 0 || pc > 100 {
+		pc = 100
 	}
 	if envLimit, ok := os.LookupEnv("DNS_LIMIT"); ok {
 		if lim, err := strconv.Atoi(envLimit); err == nil {
@@ -115,10 +125,12 @@ func main() {
 	for scanner.Scan() {
 		total++
 	}
+	total = int64(float64(total) * float64(pc) * 0.01)
 	if err := scanner.Err(); err != nil {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println("Percentage :", pc, "%")
 	fmt.Println("Total Line :", total)
 	fmt.Println("Concurrency Limit:", limit)
 	fmt.Println("Timeout:", timeout)
@@ -153,6 +165,9 @@ func main() {
 			if line > newline {
 				newline++
 				continue
+			}
+			if count >= total {
+				break
 			}
 			domain := scanner.Text()
 			ch <- domain
