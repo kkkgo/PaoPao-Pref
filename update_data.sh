@@ -6,12 +6,13 @@ rm top-1m.csv.zip top-1m.csv
 sudo apt-get -qq -y install golang
 go build -ldflags "-s -w" -trimpath -o ./paopao-pref
 export FILE_OUTPUT=yes
-export DNS_LIMIT=25
+export DNS_LIMIT=500
 export DNS_SLEEP=0ms
 export DNS_TIMEOUT=3s
 touch domains_ok.txt
 chmod +x ./paopao-pref
 ./paopao-pref
+cat domains_ok.txt|grep 03k.org
 count=$(cat domains_ok.txt | wc -l)
 if [ "$count" -gt 100000 ]; then
     mv domains_ok.txt domains.txt

@@ -1,0 +1,15 @@
+name: data-update
+
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  update_data:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Update data
+      run: sh update_data.sh
