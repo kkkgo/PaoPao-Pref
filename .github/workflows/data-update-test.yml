@@ -1,4 +1,4 @@
-name: data-update
+name: data-update-test
 
 on:
   workflow_dispatch:
