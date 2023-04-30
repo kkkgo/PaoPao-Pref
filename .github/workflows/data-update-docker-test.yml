@@ -7,7 +7,6 @@ permissions:
 
 jobs:
   build_docker:  
-    needs: update_data
     runs-on: ubuntu-latest
     steps:
       - name: Set up QEMU
