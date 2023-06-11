@@ -15,4 +15,4 @@ ENV TZ=Asia/Shanghai \
     DNS_TIMEOUT="" \
     DNS_SLEEP="" \
     DNS_LOG=""
-ENTRYPOINT ["paopao-pref"]
+CMD sh mark_update.sh 
