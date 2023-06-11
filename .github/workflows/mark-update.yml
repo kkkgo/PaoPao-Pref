@@ -1,0 +1,23 @@
+name: mark-update-4
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 07 * * 4'
+permissions:
+  contents: write
+
+jobs:
+
+  update_data:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Update mark
+      run: docker run -v $(pwd):/pub sliamb/mark_builder
+    - uses: EndBug/add-and-commit@v9
+      with:
+        author_name: Github Actions
+        author_email: actions@github.com
+        committer_email: actions@github.com
