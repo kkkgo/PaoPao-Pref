@@ -6,8 +6,8 @@ rm top-1m.csv.zip top-1m.csv
 sudo apt-get -qq -y install golang
 go build -ldflags "-s -w" -trimpath -o ./paopao-pref
 export FILE_OUTPUT=yes
-export DNS_LIMIT=12
-export DNS_SLEEP=120ms
+export DNS_LIMIT=10
+export DNS_SLEEP=80ms
 export DNS_TIMEOUT=3s
 touch domains_ok.txt
 chmod +x ./paopao-pref
