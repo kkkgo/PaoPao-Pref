@@ -6,9 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,6 +19,8 @@ import (
 
 var (
 	file     string
+	inrule   string
+	outrule  string
 	limit    int
 	line     int
 	pc       int
@@ -25,6 +30,7 @@ var (
 	wg       sync.WaitGroup
 	help     bool
 	verbose  bool
+	delay    bool
 	server   string
 	port     int
 	output   bool
@@ -35,10 +41,13 @@ var (
 
 func init() {
 	flag.StringVar(&file, "file", "domains.txt", "text file containing domain names")
+	flag.StringVar(&inrule, "inrule", "", "input proxy rule")
+	flag.StringVar(&outrule, "outrule", "", "output proxy rule.")
 	flag.IntVar(&limit, "limit", 10, "concurrency limit")
 	flag.IntVar(&line, "line", 0, "start line")
 	flag.IntVar(&pc, "pc", 0, "test percentage")
 	flag.BoolVar(&verbose, "v", false, "output nslookup results")
+	flag.BoolVar(&delay, "delay", false, "check dns server delay")
 	flag.BoolVar(&help, "h", false, "show help information")
 	flag.StringVar(&server, "server", "", "DNS server to use")
 	flag.DurationVar(&timeout, "timeout", time.Second*5, "Query timeout")
@@ -94,6 +103,13 @@ func main() {
 	if os.Getenv("DNS_LOG") == "yes" {
 		verbose = true
 	}
+	if inrule != "" {
+		err := convertRules(inrule, outrule)
+		if err != nil {
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
 	if server != "" {
 		resolver = &net.Resolver{
 			PreferGo: true,
@@ -106,6 +122,13 @@ func main() {
 		fmt.Printf("\n\033[33m%s\033[0m\n", "You must specify a DNS server: -server ...")
 		if output {
 			resolver = net.DefaultResolver
+		} else {
+			os.Exit(1)
+		}
+	}
+	if delay {
+		if check_delay("www.taobao.com") {
+			os.Exit(0)
 		} else {
 			os.Exit(1)
 		}
@@ -231,6 +254,20 @@ func nslookup(domain string) bool {
 
 }
 
+func check_delay(domain string) bool {
+	start := time.Now()
+	result := nslookup(domain)
+	elapsed := time.Since(start)
+	var delay int64
+	if result {
+		delay = elapsed.Milliseconds()
+	} else {
+		return false
+	}
+	fmt.Printf("%d", delay)
+	return true
+}
+
 func wait(wg *sync.WaitGroup) chan struct{} {
 	ch := make(chan struct{})
 	go func() {
@@ -255,4 +292,109 @@ func appendToFile(content string) {
 	if _, err = f.WriteString(content + "\n"); err != nil {
 		fmt.Println(err)
 	}
+}
+
+func convertRules(inputFile, outputFile string) error {
+	input, err := os.Open(inputFile)
+	if err != nil {
+		return err
+	}
+	defer input.Close()
+	output, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer output.Close()
+	convertedRules := make(map[string]bool)
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		line := scanner.Text()
+		convertedRule := convertRule(line)
+		if convertedRule != "" {
+			convertedRules[convertedRule] = true
+		}
+	}
+	if scanner.Err() != nil {
+		return scanner.Err()
+	}
+	writer := bufio.NewWriter(output)
+	domainList := make([]string, 0, len(convertedRules))
+	for do := range convertedRules {
+		domainList = append(domainList, do)
+	}
+
+	mergedDomains := mergeDomains(domainList)
+	for _, domain := range mergedDomains {
+		_, err := fmt.Fprintln(writer, domain)
+		if err != nil {
+			return err
+		}
+	}
+	err = writer.Flush()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Conversion completed successfully.")
+	return nil
+}
+
+func convertRule(rule string) string {
+	rule = strings.TrimSpace(rule)
+	if rule == "" || strings.HasPrefix(rule, "//") || strings.HasPrefix(rule, "!") || strings.HasPrefix(rule, "[") {
+		return ""
+	}
+	if strings.HasPrefix(rule, "domain:") {
+		return rule
+	}
+	regex := `^[A-Za-z0-9.][a-zA-Z0-9.-]+\.[a-zA-Z]{2}[a-zA-Z]*$`
+	cutany := regexp.MustCompile(`^.*\*`)
+	match, _ := regexp.MatchString(regex, rule)
+	if match {
+		return rule
+	}
+	if strings.HasPrefix(rule, "||") {
+		domain := strings.TrimPrefix(rule, "||")
+		if strings.Contains(domain, "*") {
+			return cutany.ReplaceAllString(domain, "")
+		}
+		return domain
+	} else if strings.HasPrefix(rule, "|") {
+		u, err := url.Parse(rule[1:])
+		if err != nil {
+			fmt.Printf("Error parsing URL: %s\n", rule[1:])
+			return ""
+		}
+		domain := u.Hostname()
+		if strings.Contains(domain, "*") {
+			return cutany.ReplaceAllString(domain, "")
+		}
+		return domain
+	}
+	return ""
+}
+
+func mergeDomains(domains []string) []string {
+	result := make([]string, 0)
+	uniqueDomains := make(map[string]bool)
+	for _, domain := range domains {
+		if _, found := uniqueDomains[domain]; !found {
+			uniqueDomains[domain] = true
+		}
+	}
+	for domain := range uniqueDomains {
+		if !containsDomain(domain, uniqueDomains) {
+			result = append(result, domain)
+		}
+	}
+
+	return result
+}
+
+func containsDomain(domain string, uniqueDomains map[string]bool) bool {
+	for uniqueDomain := range uniqueDomains {
+		if uniqueDomain != domain && strings.HasSuffix(domain, uniqueDomain) {
+			return true
+		}
+	}
+	return false
 }

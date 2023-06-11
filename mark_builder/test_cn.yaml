@@ -1,0 +1,49 @@
+log:
+    file: "/dev/null"
+    level: error
+
+plugins:
+
+  - tag: cnip
+    type: mmdb
+    args:
+      file: "/tmp/Country-only-cn-private.mmdb"
+
+  - tag: "force_nocn_list"
+    type: "domain_set"
+    args:
+      files:
+        - "/tmp/force_nocn_list.txt"
+
+  - tag: test_cn
+    type: forward
+    args:
+      concurrent: 3
+      upstreams:
+        - addr: "udp://{ser1}:53"
+#ser_num2        - addr: "udp://{ser2}"
+#ser_num3        - addr: "udp://{ser3}"
+
+  - tag: main_sequence
+    type: sequence
+    args:
+#gen_mark        - matches: qname $force_nocn_list
+#gen_mark          exec: reject 5
+        - exec: $test_cn
+#dns_check        - matches: resp_ip_mmdb $cnip CN
+#dns_check          exec: accept
+#dns_check        - exec: reject 3
+
+
+#gen_mark        - matches: resp_ip_mmdb $cnip CN
+#gen_mark          exec: reject 3
+#gen_mark        - matches: resp_ip_mmdb $cnip PRIVATE
+#gen_mark          exec: reject 3
+#gen_mark        - matches: has_wanted_ans
+#gen_mark          exec: accept
+#gen_mark        - exec: reject 3
+  - tag: udp_server
+    type: udp_server
+    args:
+      entry: main_sequence
+      listen: :53

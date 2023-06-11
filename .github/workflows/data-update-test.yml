@@ -1,4 +1,4 @@
-name: data-update-test
+name: data-update-test-no-commit
 
 on:
   workflow_dispatch:
