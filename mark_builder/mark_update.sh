@@ -454,7 +454,7 @@ sleep 1
 touch domains_ok.txt
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
 ps
-#paopao-pref
+paopao-pref
 cat /tmp/inrule.txt >> domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 xz -9 -e global_mark.dat
