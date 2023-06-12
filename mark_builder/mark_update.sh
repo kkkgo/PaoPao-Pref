@@ -1,4 +1,5 @@
 #!/bin/sh
+cp /pub/domains.txt .
 curl -sLo /tmp/Country-only-cn-private.mmdb https://raw.githubusercontent.com/kkkgo/Country-only-cn-private.mmdb/main/Country-only-cn-private.mmdb
 mmdb_hash=$(sha256sum /tmp/Country-only-cn-private.mmdb | grep -Eo "[a-zA-Z0-9]{64}" | head -1)
 mmdb_down_hash=$(curl -s https://raw.githubusercontent.com/kkkgo/Country-only-cn-private.mmdb/main/Country-only-cn-private.mmdb.sha256sum | grep -Eo "[a-zA-Z0-9]{64}" | head -1)
@@ -450,20 +451,15 @@ fi
 mosdns start -d /tmp -c gen_mark.yaml  &
 sleep 1
 
-export FILE_OUTPUT=yes
-export DNS_LIMIT=25
-export DNS_SLEEP=0ms
-export DNS_TIMEOUT=3s
 touch domains_ok.txt
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
 ps
 paopao-pref
 cat /tmp/inrule.txt >> domains_ok.txt
-paopao-pref -inrule /tmp/domains_ok.txt -outrule global_mark.dat
+paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz |cut -d" " -f1)
 echo $datsha > sha.txt
 dd if=/dev/zero of=sha.txt bs=1 count=1024 seek=$(wc -c < sha.txt) conv=notrunc
 cat global_mark.dat.xz sha.txt > global_mark.dat
-mkdir -p /pub
 mv global_mark.dat /pub

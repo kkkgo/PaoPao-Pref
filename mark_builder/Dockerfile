@@ -10,9 +10,9 @@ ENV TZ=Asia/Shanghai \
     DNS_SERVER="" \
     DNS_PORT="" \
     DNS_LINE="" \
-    DNS_LIMIT="" \
-    DNS_TIMEOUT="" \
-    DNS_SLEEP="" \
-    DNS_LOG=""
+    DNS_LIMIT="25" \
+    DNS_TIMEOUT="3s" \
+    DNS_SLEEP="0ms" \
+    FILE_OUTPUT=yes
 WORKDIR /data/
 CMD sh mark_update.sh 
