@@ -454,12 +454,13 @@ sleep 1
 touch domains_ok.txt
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
 ps
-paopao-pref
+#paopao-pref
 cat /tmp/inrule.txt >> domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz |cut -d" " -f1)
-echo $datsha > sha.txt
-dd if=/dev/zero of=sha.txt bs=1 count=1024 seek=$(wc -c < sha.txt) conv=notrunc
+echo -n $datsha > sha.txt
+shasize=$(wc -c < sha.txt)
+dd if=/dev/zero of=sha.txt bs=1 count=$((1024-shasize)) seek=$shasize conv=notrunc
 cat global_mark.dat.xz sha.txt > global_mark.dat
 mv global_mark.dat /pub
