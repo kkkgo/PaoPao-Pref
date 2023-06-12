@@ -34,7 +34,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
     - name: Update mark
-      run: docker run -v $(pwd):/pub -e DNS_LIMIT=25 sliamb/mark_builder
+      run: docker run -v $(pwd):/pub -e DNS_LIMIT=20 sliamb/mark_builder
     - run: git pull
     - uses: EndBug/add-and-commit@v9
       with:
