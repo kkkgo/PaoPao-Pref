@@ -463,4 +463,5 @@ echo -n $datsha > sha.txt
 shasize=$(wc -c < sha.txt)
 dd if=/dev/zero of=sha.txt bs=1 count=$((1024-shasize)) seek=$shasize conv=notrunc
 cat global_mark.dat.xz sha.txt > global_mark.dat
+sha256sum global_mark.dat| cut -d" " -f1 > /pub/global_mark.dat.sha256sum
 mv global_mark.dat /pub
