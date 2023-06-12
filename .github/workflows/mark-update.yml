@@ -41,3 +41,7 @@ jobs:
         author_name: Github Actions
         author_email: actions@github.com
         committer_email: actions@github.com
+    - name: Flash CDN
+      run: |
+          curl -i https://purge.jsdelivr.net/gh/${{ github.repository }}/global_mark.dat.sha256sum &&
+          curl -i https://purge.jsdelivr.net/gh/${{ github.repository }}/global_mark.dat
