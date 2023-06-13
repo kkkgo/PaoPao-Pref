@@ -27,6 +27,7 @@ jobs:
   
   build_mark:
     runs-on: ubuntu-latest
+    needs: build_docker
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
