@@ -42,7 +42,7 @@ jobs:
           tags: sliamb/paopao-pref:latest
 
   build_mark:
-    needs: update_data
+    needs: build_docker
     runs-on: ubuntu-latest
     steps:
       - name: Set up QEMU
@@ -54,9 +54,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: actions/checkout@v3
-      - name: copy data
-        run: cp domains.txt ./mark_builder/
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
