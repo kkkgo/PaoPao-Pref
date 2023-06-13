@@ -27,8 +27,8 @@ plugins:
   - tag: main_sequence
     type: sequence
     args:
-        - matches: "qtype 28"
-          exec: black_hole 2001:4860:4860::8888
+#dns_check        - matches: "qtype 28"
+#dns_check          exec: reject 5
 #gen_mark        - matches: qname $force_nocn_list
 #gen_mark          exec: reject 5
         - exec: $test_cn
