@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,6 +30,7 @@ var (
 	total    int64
 	wg       sync.WaitGroup
 	help     bool
+	analyze  bool
 	verbose  bool
 	delay    bool
 	server   string
@@ -49,6 +51,7 @@ func init() {
 	flag.BoolVar(&verbose, "v", false, "output nslookup results")
 	flag.BoolVar(&delay, "delay", false, "check dns server delay")
 	flag.BoolVar(&help, "h", false, "show help information")
+	flag.BoolVar(&analyze, "an", false, "analyze")
 	flag.StringVar(&server, "server", "", "DNS server to use")
 	flag.DurationVar(&timeout, "timeout", time.Second*5, "Query timeout")
 	flag.DurationVar(&sleep, "sleep", time.Millisecond*1500, "Query sleep")
@@ -61,6 +64,74 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	}
+	if analyze {
+		inputFile := "domains.txt"
+		reversedOutputFile := "reversed_domain.txt"
+		anaOutputFile := "domains_ana.txt"
+
+		input, err := os.Open(inputFile)
+		if err != nil {
+			fmt.Println("o err:", err)
+			return
+		}
+		defer input.Close()
+
+		reversedOutput, err := os.Create(reversedOutputFile)
+		if err != nil {
+			fmt.Println("c err:", err)
+			return
+		}
+		defer reversedOutput.Close()
+
+		anaOutput, err := os.Create(anaOutputFile)
+		if err != nil {
+			fmt.Println("w err:", err)
+			return
+		}
+		defer anaOutput.Close()
+
+		domainCount := make(map[string]int)
+
+		scanner := bufio.NewScanner(input)
+		for scanner.Scan() {
+			domain := scanner.Text()
+			reversed := reverseDomain(domain)
+			_, err := fmt.Fprintln(reversedOutput, reversed)
+			if err != nil {
+				fmt.Println("w err:", err)
+				return
+			}
+			mainDomain := extractMainDomain(domain)
+			domainCount[mainDomain]++
+		}
+		if scanner.Err() != nil {
+			fmt.Println("r err:", scanner.Err())
+			return
+		}
+		type domainCountPair struct {
+			Domain string
+			Count  int
+		}
+		var domainCounts []domainCountPair
+		for domain, count := range domainCount {
+			domainCounts = append(domainCounts, domainCountPair{Domain: domain, Count: count})
+		}
+		sort.Slice(domainCounts, func(i, j int) bool {
+			return domainCounts[i].Count > domainCounts[j].Count
+		})
+		for _, pair := range domainCounts {
+			_, err := fmt.Fprintf(anaOutput, "%s: %d\n", pair.Domain, pair.Count)
+			if err != nil {
+				fmt.Println("w err:", err)
+				return
+			}
+		}
+
+		fmt.Println("re save:", reversedOutputFile)
+		fmt.Println("an save:", anaOutputFile)
+		os.Exit(0)
+	}
+
 	if server == "" {
 		server = os.Getenv("DNS_SERVER")
 	}
@@ -338,7 +409,7 @@ func convertRules(inputFile, outputFile string) error {
 
 func convertRule(rule string) string {
 	rule = strings.TrimSpace(rule)
-	if rule == "" || strings.HasPrefix(rule, "//") || strings.HasPrefix(rule, "!") || strings.HasPrefix(rule, "[") {
+	if rule == "" || strings.HasPrefix(rule, "//") || strings.HasPrefix(rule, "!") || strings.HasPrefix(rule, "@") || strings.HasPrefix(rule, "[") {
 		return ""
 	}
 	if strings.HasPrefix(rule, "domain:") {
@@ -395,4 +466,24 @@ func containsDomain(domain string, uniqueDomains map[string]bool) bool {
 		}
 	}
 	return false
+}
+
+func reverseDomain(domain string) string {
+	parts := strings.Split(domain, ".")
+	reversed := ""
+	for i := len(parts) - 1; i >= 0; i-- {
+		reversed += parts[i]
+		if i != 0 {
+			reversed += "."
+		}
+	}
+	return reversed
+}
+
+func extractMainDomain(domain string) string {
+	parts := strings.Split(domain, ".")
+	if len(parts) < 2 {
+		return domain
+	}
+	return parts[len(parts)-2] + "." + parts[len(parts)-1]
 }
