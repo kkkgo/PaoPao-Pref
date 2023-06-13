@@ -7,7 +7,10 @@ RUN curl -sLo /src/Country-only-cn-private.mmdb https://raw.githubusercontent.co
 RUN curl -sLo /src/inrule_base64.txt https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt &&\
     domains_size=$(wc -c <"/src/inrule_base64.txt") &&\
     if [ "$domains_size" -gt 100000 ]; then echo "domains_size pass.";else echo "domains_size failed";cp /domains_size /;exit;fi &&\
-    base64 -d /src/inrule_base64.txt > /src/inrule.txt 
+    base64 -d /src/inrule_base64.txt > /src/inrule.txt
+RUN curl -sLo /src/domains.txt https://github.com/kkkgo/PaoPao-Pref/raw/main/domains.txt &&\
+    domains_size=$(wc -c <"/src/domains.txt") &&\
+    if [ "$domains_size" -gt 10000000 ]; then echo "domains_size pass.";else echo "domains_size failed";cp /domains_size /;exit;fi
 
 FROM alpine:edge
 RUN apk add --no-cache curl xz
@@ -15,6 +18,7 @@ COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 COPY --from=sliamb/prebuild-paopaodns /src/mosdns /usr/bin/
 COPY --from=download /src/Country-only-cn-private.mmdb /data/
 COPY --from=download /src/inrule.txt /data/
+COPY --from=download /src/domains.txt /data/
 COPY dns_list.txt /data/
 COPY test_cn.yaml /data/
 COPY mark_update.sh /data/
