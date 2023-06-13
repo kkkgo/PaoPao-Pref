@@ -258,14 +258,12 @@ func check_delay(domain string) bool {
 	start := time.Now()
 	result := nslookup(domain)
 	elapsed := time.Since(start)
-	var delay int64
 	if result {
-		delay = elapsed.Milliseconds()
+		fmt.Printf("%d", elapsed.Milliseconds())
+		return true
 	} else {
 		return false
 	}
-	fmt.Printf("%d", delay)
-	return true
 }
 
 func wait(wg *sync.WaitGroup) chan struct{} {
