@@ -18,7 +18,7 @@ COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 COPY --from=sliamb/prebuild-paopaodns /src/mosdns /usr/bin/
 COPY --from=download /src/Country-only-cn-private.mmdb /data/
 COPY --from=download /src/inrule.txt /data/
-COPY --from=download /src/domains.txt /data/
+COPY --from=download /src/domains.txt /
 COPY dns_list.txt /data/
 COPY test_cn.yaml /data/
 COPY mark_update.sh /data/
