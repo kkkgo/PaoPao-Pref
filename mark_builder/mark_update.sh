@@ -421,7 +421,6 @@ while read dnsserver; do
     killall mosdns
 done <dns_list.txt
 cat /tmp/delay.txt
-exit
 sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list.txt
 cat /tmp/dns_list.txt
 ser_num=$(cat /tmp/dns_list.txt | wc -l)
