@@ -1,4 +1,4 @@
-FROM alpine:edge AS download
+FROM sliamb/paopaodns AS download
 WORKDIR /src
 RUN curl -sLo /src/Country-only-cn-private.mmdb https://raw.githubusercontent.com/kkkgo/Country-only-cn-private.mmdb/main/Country-only-cn-private.mmdb &&\
     mmdb_hash=$(sha256sum /src/Country-only-cn-private.mmdb | grep -Eo "[a-zA-Z0-9]{64}" | head -1) &&\
