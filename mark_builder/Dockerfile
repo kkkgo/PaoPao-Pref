@@ -22,7 +22,6 @@ COPY --from=download /src/domains.txt /data/
 COPY dns_list.txt /data/
 COPY test_cn.yaml /data/
 COPY mark_update.sh /data/
-COPY domains.txt /
 ENV TZ=Asia/Shanghai \
     DNS_SERVER="" \
     DNS_PORT="" \
