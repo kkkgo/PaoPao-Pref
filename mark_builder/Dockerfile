@@ -1,11 +1,24 @@
+FROM alpine:edge AS download
+WORKDIR /src
+RUN curl -sLo /src/Country-only-cn-private.mmdb https://raw.githubusercontent.com/kkkgo/Country-only-cn-private.mmdb/main/Country-only-cn-private.mmdb &&\
+    mmdb_hash=$(sha256sum /src/Country-only-cn-private.mmdb | grep -Eo "[a-zA-Z0-9]{64}" | head -1) &&\
+    mmdb_down_hash=$(curl -s https://raw.githubusercontent.com/kkkgo/Country-only-cn-private.mmdb/main/Country-only-cn-private.mmdb.sha256sum | grep -Eo "[a-zA-Z0-9]{64}" | head -1) &&\
+    if [ "$mmdb_down_hash" != "$mmdb_hash" ]; then cp /mmdb_down_hash_error .;exit;fi
+RUN curl -sLo /src/inrule_base64.txt https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt &&\
+    domains_size=$(wc -c <"/src/inrule_base64.txt") &&\
+    if [ "$domains_size" -gt 100000 ]; then echo "domains_size pass.";else echo "domains_size failed";cp /domains_size /;exit;fi &&\
+    base64 -d /src/inrule_base64.txt > /src/inrule.txt 
+
 FROM alpine:edge
 RUN apk add --no-cache curl xz
 COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 COPY --from=sliamb/prebuild-paopaodns /src/mosdns /usr/bin/
-ADD https://github.com/kkkgo/PaoPao-Pref/raw/main/domains.txt /data/
+COPY --from=download /src/Country-only-cn-private.mmdb /data/
+COPY --from=download /src/inrule.txt /data/
 COPY dns_list.txt /data/
 COPY test_cn.yaml /data/
 COPY mark_update.sh /data/
+COPY domains.txt /
 ENV TZ=Asia/Shanghai \
     DNS_SERVER="" \
     DNS_PORT="" \
@@ -15,4 +28,4 @@ ENV TZ=Asia/Shanghai \
     DNS_SLEEP="0ms" \
     FILE_OUTPUT=yes
 WORKDIR /data/
-CMD sh mark_update.sh 
+CMD sh mark_update.sh

@@ -38,6 +38,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: copy data
+        run: cp domains.txt ./mark_builder/
       - name: Build and push
         uses: docker/build-push-action@v4
         with:

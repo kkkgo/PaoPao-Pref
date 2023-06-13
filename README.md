@@ -28,6 +28,8 @@
 ![pull](https://img.shields.io/docker/pulls/sliamb/paopao-pref.svg) ![size](https://img.shields.io/docker/image-size/sliamb/paopao-pref)   
 ![Docker Platforms](https://img.shields.io/badge/platforms-linux%2F386%20%7C%20linux%2Famd64%20%7C%20linux%2Farm%2Fv6%20%7C%20linux%2Farm%2Fv7%20%7C%20linux%2Farm64%2Fv8%20%7C%20linux%2Fppc64le%20%7C%20linux%2Friscv64%20%7C%20linux%2Fs390x-blue)   
 ```shell
+# 每次操作前先拉取最新镜像
+docker pull sliamb/paopao-pref
 # 帮助信息
 docker run --rm -it sliamb/paopao-pref -h
 # 指定DNS服务器为192.168.1.8

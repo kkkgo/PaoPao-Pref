@@ -7,7 +7,7 @@ plugins:
   - tag: cnip
     type: mmdb
     args:
-      file: "/tmp/Country-only-cn-private.mmdb"
+      file: "/data/Country-only-cn-private.mmdb"
 
   - tag: "force_nocn_list"
     type: "domain_set"
