@@ -1,20 +1,24 @@
 #!/bin/sh
+IPREX4='([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 if [ -f /pub/tlds.txt ]; then
     cat /pub/tlds.txt >>/data/inrule.txt
 fi
 paopao-pref -inrule /data/inrule.txt -outrule /tmp/force_nocn_list.txt
-
-touch /tmp/delay.txt
-while read dnsserver; do
-    sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
-    mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
-    sleep 1
-    delay=$(paopao-pref -server 127.0.0.1 -delay) && echo "$delay"",""$dnsserver" >>/tmp/delay.txt && echo "$dnsserver"": ""$delay"" ms"
-    killall mosdns
-done <dns_list.txt
-cat /tmp/delay.txt
-sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list.txt
-cat /tmp/dns_list.txt
+if [ "$SYSDNS" = "no" ]; then
+    touch /tmp/delay.txt
+    while read dnsserver; do
+        sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
+        mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
+        sleep 1
+        delay=$(paopao-pref -server 127.0.0.1 -delay) && echo "$delay"",""$dnsserver" >>/tmp/delay.txt && echo "$dnsserver"": ""$delay"" ms"
+        killall mosdns
+    done <dns_list.txt
+    cat /tmp/delay.txt
+    sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list.txt
+    cat /tmp/dns_list.txt
+else
+    cat /etc/resolv.conf | grep -Eo "$IPREX4" >/tmp/dns_list.txt
+fi
 ser_num=$(cat /tmp/dns_list.txt | wc -l)
 if [ "$ser_num" = "0" ]; then
     echo "no dns available."
