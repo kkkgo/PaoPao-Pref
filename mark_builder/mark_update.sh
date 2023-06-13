@@ -420,7 +420,8 @@ while read dnsserver; do
     delay=$(paopao-pref -server $dnsserver -delay) && echo "$delay"",""$dnsserver" >>/tmp/delay.txt && echo "$dnsserver"": ""$delay"" ms"
     killall mosdns
 done <dns_list.txt
-
+cat /tmp/delay.txt
+exit
 sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list.txt
 cat /tmp/dns_list.txt
 ser_num=$(cat /tmp/dns_list.txt | wc -l)
