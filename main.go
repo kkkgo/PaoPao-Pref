@@ -323,7 +323,7 @@ func convertRules(inputFile, outputFile string) error {
 
 	mergedDomains := mergeDomains(domainList)
 	for _, domain := range mergedDomains {
-		_, err := fmt.Fprintln(writer, domain)
+		_, err := fmt.Fprintln(writer, "domain:"+domain)
 		if err != nil {
 			return err
 		}
@@ -342,7 +342,7 @@ func convertRule(rule string) string {
 		return ""
 	}
 	if strings.HasPrefix(rule, "domain:") {
-		return rule
+		return strings.Replace(rule, "domain:", "", 1)
 	}
 	regex := `^[A-Za-z0-9.][a-zA-Z0-9.-]+\.[a-zA-Z]{2}[a-zA-Z]*$`
 	cutany := regexp.MustCompile(`^.*\*`)
