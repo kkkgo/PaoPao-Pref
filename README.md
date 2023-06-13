@@ -30,8 +30,6 @@
 ```shell
 # 每次操作前先拉取最新镜像
 docker pull sliamb/paopao-pref
-# 帮助信息
-docker run --rm -it sliamb/paopao-pref -h
 # 指定DNS服务器为192.168.1.8
 docker run --rm -it sliamb/paopao-pref -server 192.168.1.8
 # 从第1000行开始
