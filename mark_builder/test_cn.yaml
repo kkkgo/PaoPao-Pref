@@ -27,6 +27,8 @@ plugins:
   - tag: main_sequence
     type: sequence
     args:
+        - matches: "!qtype 1"
+          exec: reject 0
 #gen_mark        - matches: qname $force_nocn_list
 #gen_mark          exec: reject 5
         - exec: $test_cn
