@@ -50,10 +50,12 @@ sleep 1
 touch domains_ok.txt
 echo "nameserver 127.0.0.1" >/etc/resolv.conf
 ps
-# paopao-pref -inrule /domains.txt -outrule /data/domains.txt
+cat /tmp/force_nocn_list.txt >>/domains.txt
+paopao-pref -inrule /domains.txt -outrule /data/domains.txt
 paopao-pref
-cat /tmp/force_nocn_list.txt >>domains_ok.txt
+cat /tmp/force_nocn_list.txt >>/data/domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
+cp /data/global_mark.dat /pub/raw.dat
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz | cut -d" " -f1)
 echo -n $datsha >sha.txt
