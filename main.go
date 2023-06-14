@@ -40,6 +40,7 @@ var (
 	sleep    time.Duration
 	resolver *net.Resolver
 )
+var domainRegex = regexp.MustCompile(`^[A-Za-z0-9.][a-zA-Z0-9.-]+\.[a-zA-Z]{2}[a-zA-Z]*$`)
 
 func init() {
 	flag.StringVar(&file, "file", "domains.txt", "text file containing domain names")
@@ -363,50 +364,6 @@ func appendToFile(content string) {
 	}
 }
 
-func convertRules(inputFile, outputFile string) error {
-	input, err := os.Open(inputFile)
-	if err != nil {
-		return err
-	}
-	defer input.Close()
-	output, err := os.Create(outputFile)
-	if err != nil {
-		return err
-	}
-	defer output.Close()
-	convertedRules := make(map[string]bool)
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		convertedRule := convertRule(line)
-		if convertedRule != "" {
-			convertedRules[convertedRule] = true
-		}
-	}
-	if scanner.Err() != nil {
-		return scanner.Err()
-	}
-	writer := bufio.NewWriter(output)
-	domainList := make([]string, 0, len(convertedRules))
-	for do := range convertedRules {
-		domainList = append(domainList, do)
-	}
-
-	mergedDomains := mergeDomains(domainList)
-	for _, domain := range mergedDomains {
-		_, err := fmt.Fprintln(writer, "domain:"+domain)
-		if err != nil {
-			return err
-		}
-	}
-	err = writer.Flush()
-	if err != nil {
-		return err
-	}
-	fmt.Println("Conversion completed successfully.")
-	return nil
-}
-
 func convertRule(rule string) string {
 	rule = strings.TrimSpace(rule)
 	if rule == "" || strings.HasPrefix(rule, "//") || strings.HasPrefix(rule, "!") || strings.HasPrefix(rule, "@") || strings.HasPrefix(rule, "[") {
@@ -415,19 +372,19 @@ func convertRule(rule string) string {
 	if strings.HasPrefix(rule, "domain:") {
 		return strings.Replace(rule, "domain:", "", 1)
 	}
-	regex := `^[A-Za-z0-9.][a-zA-Z0-9.-]+\.[a-zA-Z]{2}[a-zA-Z]*$`
-	cutany := regexp.MustCompile(`^.*\*`)
-	match, _ := regexp.MatchString(regex, rule)
+
+	match := domainRegex.MatchString(rule)
 	if match {
 		return rule
 	}
-	if strings.HasPrefix(rule, "||") {
-		domain := strings.TrimPrefix(rule, "||")
+
+	if len(rule) >= 2 && rule[:2] == "||" {
+		domain := rule[2:]
 		if strings.Contains(domain, "*") {
-			return cutany.ReplaceAllString(domain, "")
+			return strings.TrimPrefix(domain, "*")
 		}
 		return domain
-	} else if strings.HasPrefix(rule, "|") {
+	} else if len(rule) >= 1 && rule[0] == '|' {
 		u, err := url.Parse(rule[1:])
 		if err != nil {
 			fmt.Printf("Error parsing URL: %s\n", rule[1:])
@@ -435,7 +392,7 @@ func convertRule(rule string) string {
 		}
 		domain := u.Hostname()
 		if strings.Contains(domain, "*") {
-			return cutany.ReplaceAllString(domain, "")
+			return strings.TrimPrefix(domain, "*")
 		}
 		return domain
 	}
@@ -443,16 +400,21 @@ func convertRule(rule string) string {
 }
 
 func mergeDomains(domains []string) []string {
-	result := make([]string, 0)
+	result := make([]string, 0, len(domains))
 	uniqueDomains := make(map[string]bool)
+	var mutex sync.Mutex
+
 	for _, domain := range domains {
 		if _, found := uniqueDomains[domain]; !found {
 			uniqueDomains[domain] = true
 		}
 	}
+
 	for domain := range uniqueDomains {
 		if !containsDomain(domain, uniqueDomains) {
+			mutex.Lock()
 			result = append(result, domain)
+			mutex.Unlock()
 		}
 	}
 
@@ -466,6 +428,55 @@ func containsDomain(domain string, uniqueDomains map[string]bool) bool {
 		}
 	}
 	return false
+}
+
+func convertRules(inputFile, outputFile string) error {
+	input, err := os.Open(inputFile)
+	if err != nil {
+		return err
+	}
+	defer input.Close()
+
+	output, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer output.Close()
+
+	convertedRules := make(map[string]struct{})
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		line := scanner.Text()
+		convertedRule := convertRule(line)
+		if convertedRule != "" {
+			convertedRules[convertedRule] = struct{}{}
+		}
+	}
+	if scanner.Err() != nil {
+		return scanner.Err()
+	}
+
+	writer := bufio.NewWriter(output)
+	domainList := make([]string, 0, len(convertedRules))
+	for do := range convertedRules {
+		domainList = append(domainList, do)
+	}
+
+	mergedDomains := mergeDomains(domainList)
+	for _, domain := range mergedDomains {
+		_, err := fmt.Fprintln(writer, "domain:"+domain)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = writer.Flush()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Conversion completed successfully.")
+	return nil
 }
 
 func reverseDomain(domain string) string {

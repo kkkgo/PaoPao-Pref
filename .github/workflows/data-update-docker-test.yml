@@ -26,6 +26,7 @@ jobs:
           tags: sliamb/paopao-pref:latest
   
   build_mark:
+    needs: build_docker
     runs-on: ubuntu-latest
     steps:
       - name: Set up QEMU
