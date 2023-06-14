@@ -4,6 +4,8 @@ unzip top-1m.csv.zip
 cut -d"," -f2 top-1m.csv >domains.txt
 rm top-1m.csv.zip top-1m.csv
 sudo apt-get -qq -y install golang
+go mod init paopao-perf 
+go get -u
 go build -ldflags "-s -w" -trimpath -o ./paopao-pref
 export FILE_OUTPUT=yes
 export DNS_LIMIT=10
@@ -18,4 +20,4 @@ if [ "$count" -gt 100000 ]; then
 else
     rm domains_ok.txt
 fi
-rm paopao-pref
+rm paopao-pref go.mod go.sum

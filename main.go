@@ -307,6 +307,8 @@ func main() {
 }
 
 func nslookup(domain string) bool {
+	domain = strings.Replace(domain, "domain:.", "", 1)
+	domain = strings.Replace(domain, "domain:", "", 1)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	r, err := resolver.LookupIPAddr(ctx, domain)
@@ -369,6 +371,7 @@ func convertRule(rule string) string {
 	if rule == "" || strings.HasPrefix(rule, "//") || strings.HasPrefix(rule, "!") || strings.HasPrefix(rule, "@") || strings.HasPrefix(rule, "[") {
 		return ""
 	}
+
 	if strings.HasPrefix(rule, "domain:") {
 		return strings.Replace(rule, "domain:", "", 1)
 	}
@@ -398,38 +401,16 @@ func convertRule(rule string) string {
 	}
 	return ""
 }
-
-func mergeDomains(domains []string) []string {
-	result := make([]string, 0, len(domains))
-	uniqueDomains := make(map[string]bool)
-	var mutex sync.Mutex
-
-	for _, domain := range domains {
-		if _, found := uniqueDomains[domain]; !found {
-			uniqueDomains[domain] = true
-		}
+func addDotIfMissing(str string) string {
+	if str == "" {
+		return ""
 	}
 
-	for domain := range uniqueDomains {
-		if !containsDomain(domain, uniqueDomains) {
-			mutex.Lock()
-			result = append(result, domain)
-			mutex.Unlock()
-		}
+	if str[0] != '.' {
+		str = "." + str
 	}
-
-	return result
+	return str
 }
-
-func containsDomain(domain string, uniqueDomains map[string]bool) bool {
-	for uniqueDomain := range uniqueDomains {
-		if uniqueDomain != domain && strings.HasSuffix(domain, uniqueDomain) {
-			return true
-		}
-	}
-	return false
-}
-
 func convertRules(inputFile, outputFile string) error {
 	input, err := os.Open(inputFile)
 	if err != nil {
@@ -443,25 +424,49 @@ func convertRules(inputFile, outputFile string) error {
 	}
 	defer output.Close()
 
-	convertedRules := make(map[string]struct{})
 	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		convertedRule := convertRule(line)
-		if convertedRule != "" {
-			convertedRules[convertedRule] = struct{}{}
+	writer := bufio.NewWriter(output)
+	convertedRules := make(map[string]bool)
+	batchSize := 1000000
+
+	for {
+		lines := make([]string, 0, batchSize)
+		for i := 0; i < batchSize && scanner.Scan(); i++ {
+			line := scanner.Text()
+			lines = append(lines, line)
+		}
+		fmt.Println("read domains.")
+		var wg sync.WaitGroup
+		mu := sync.Mutex{}
+
+		for _, line := range lines {
+			wg.Add(1)
+			go func(line string) {
+				defer wg.Done()
+				convertedRule := addDotIfMissing(convertRule(line))
+				if convertedRule != "" {
+					mu.Lock()
+					convertedRules[convertedRule] = true
+					mu.Unlock()
+				}
+			}(line)
+		}
+
+		wg.Wait()
+
+		if len(lines) < batchSize {
+			break
 		}
 	}
+
 	if scanner.Err() != nil {
 		return scanner.Err()
 	}
-
-	writer := bufio.NewWriter(output)
 	domainList := make([]string, 0, len(convertedRules))
 	for do := range convertedRules {
 		domainList = append(domainList, do)
 	}
-
+	fmt.Println("start mergedDomains.")
 	mergedDomains := mergeDomains(domainList)
 	for _, domain := range mergedDomains {
 		_, err := fmt.Fprintln(writer, "domain:"+domain)
@@ -477,6 +482,35 @@ func convertRules(inputFile, outputFile string) error {
 
 	fmt.Println("Conversion completed successfully.")
 	return nil
+}
+func mergeDomains(domains []string) []string {
+	result := make([]string, 0, len(domains))
+	uniqueDomains := make([]string, 0, len(domains))
+	seen := make(map[string]struct{})
+	for _, domain := range domains {
+		if _, ok := seen[domain]; !ok {
+			seen[domain] = struct{}{}
+			uniqueDomains = append(uniqueDomains, domain)
+		}
+	}
+	sort.Slice(uniqueDomains, func(i, j int) bool {
+		return len(uniqueDomains[i]) < len(uniqueDomains[j])
+	})
+
+	for _, domain := range uniqueDomains {
+		found := false
+		for _, uniqueDomain := range result {
+			if strings.HasSuffix(domain, uniqueDomain) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			result = append(result, domain)
+		}
+	}
+
+	return result
 }
 
 func reverseDomain(domain string) string {
