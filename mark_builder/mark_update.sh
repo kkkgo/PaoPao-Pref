@@ -1,9 +1,10 @@
 #!/bin/sh
 IPREX4='([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+cat /data/inrule.txt >>/tmp/inrule.txt
 if [ -f /pub/tlds.txt ]; then
-    cat /pub/tlds.txt >>/data/inrule.txt
+    cat /pub/tlds.txt >>/tmp/inrule.txt
 fi
-paopao-pref -inrule /data/inrule.txt -outrule /tmp/force_nocn_list.txt
+paopao-pref -inrule /tmp/inrule.txt -outrule /tmp/force_nocn_list.txt
 if [ "$SYSDNS" = "no" ]; then
     touch /tmp/delay.txt
     while read dnsserver; do
@@ -49,7 +50,7 @@ sleep 1
 touch domains_ok.txt
 echo "nameserver 127.0.0.1" >/etc/resolv.conf
 ps
-paopao-pref -inrule /domains.txt -outrule /data/domains.txt
+# paopao-pref -inrule /domains.txt -outrule /data/domains.txt
 paopao-pref
 cat /tmp/force_nocn_list.txt >>domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
