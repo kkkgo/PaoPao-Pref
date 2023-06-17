@@ -1,9 +1,18 @@
 #!/bin/sh
-IPREX4='([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
-cat /data/inrule.txt >>/tmp/inrule.txt
-if [ -f /pub/tlds.txt ]; then
-    cat /pub/tlds.txt >>/tmp/inrule.txt
+if [ "$TEST" = "yes" ]; then
+    sleep 10
+    exit
 fi
+IPREX4='([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
+touch /tmp/inrule.txt
+if [ -f /pub/tlds.txt ]; then
+    cat /pub/tlds.txt >>/data/inrule.txt
+fi
+if [ -f /pub/cn.txt ]; then
+    cat /pub/cn.txt >>/tmp/inrule.txt
+fi
+cat /data/inrule.txt >>/tmp/inrule.txt
+
 paopao-pref -inrule /tmp/inrule.txt -outrule /tmp/force_nocn_list.txt
 if [ "$SYSDNS" = "no" ]; then
     touch /tmp/delay.txt
@@ -53,7 +62,7 @@ ps
 cat /tmp/force_nocn_list.txt >>/domains.txt
 paopao-pref -inrule /domains.txt -outrule /data/domains.txt
 paopao-pref
-cat /tmp/force_nocn_list.txt >>/data/domains_ok.txt
+cat /data/inrule.txt >>/data/domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 cp /data/global_mark.dat /pub/raw.dat
 xz -9 -e global_mark.dat

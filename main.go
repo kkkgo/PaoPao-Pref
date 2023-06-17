@@ -66,23 +66,18 @@ func main() {
 		os.Exit(0)
 	}
 	if analyze {
-		inputFile := "domains.txt"
-		reversedOutputFile := "reversed_domain.txt"
-		anaOutputFile := "domains_ana.txt"
-
+		inputFile := inrule
+		anaOutputFile := outrule
+		if inputFile == "" || anaOutputFile == "" {
+			fmt.Println("-an -inrule domains.txt -outrule ana.txt")
+			os.Exit(1)
+		}
 		input, err := os.Open(inputFile)
 		if err != nil {
 			fmt.Println("o err:", err)
 			return
 		}
 		defer input.Close()
-
-		reversedOutput, err := os.Create(reversedOutputFile)
-		if err != nil {
-			fmt.Println("c err:", err)
-			return
-		}
-		defer reversedOutput.Close()
 
 		anaOutput, err := os.Create(anaOutputFile)
 		if err != nil {
@@ -96,12 +91,6 @@ func main() {
 		scanner := bufio.NewScanner(input)
 		for scanner.Scan() {
 			domain := scanner.Text()
-			reversed := reverseDomain(domain)
-			_, err := fmt.Fprintln(reversedOutput, reversed)
-			if err != nil {
-				fmt.Println("w err:", err)
-				return
-			}
 			mainDomain := extractMainDomain(domain)
 			domainCount[mainDomain]++
 		}
@@ -127,9 +116,7 @@ func main() {
 				return
 			}
 		}
-
-		fmt.Println("re save:", reversedOutputFile)
-		fmt.Println("an save:", anaOutputFile)
+		fmt.Println("analyze save:", anaOutputFile)
 		os.Exit(0)
 	}
 
