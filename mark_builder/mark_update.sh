@@ -1,8 +1,4 @@
 #!/bin/sh
-if [ "$TEST" = "yes" ]; then
-    sleep 10
-    exit
-fi
 IPREX4='([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 touch /tmp/inrule.txt
 if [ -f /pub/tlds.txt ]; then
@@ -64,7 +60,9 @@ paopao-pref -inrule /domains.txt -outrule /data/domains.txt
 paopao-pref
 cat /data/inrule.txt >>/data/domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
-cp /data/global_mark.dat /pub/raw.dat
+if [ "$TEST" = "debug" ]; then
+    cp /data/global_mark.dat /pub/raw.dat
+fi
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz | cut -d" " -f1)
 echo -n $datsha >sha.txt
