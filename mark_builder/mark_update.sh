@@ -53,15 +53,16 @@ mosdns start -d /tmp -c gen_mark.yaml &
 sleep 1
 
 touch domains_ok.txt
-echo "nameserver 127.0.0.1" >/etc/resolv.conf
 ps
 cat /tmp/force_nocn_list.txt >>/domains.txt
 paopao-pref -inrule /domains.txt -outrule /data/domains.txt
-paopao-pref
+echo "Start pref..."
+paopao-pref -server 127.0.0.1 >/data/pref.log
 cat /data/inrule.txt >>/data/domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 if [ "$TEST" = "debug" ]; then
     cp /data/global_mark.dat /pub/raw.dat
+    cp /data/pref.log /pub/
 fi
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz | cut -d" " -f1)
