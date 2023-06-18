@@ -16,7 +16,7 @@ if [ "$SYSDNS" = "no" ]; then
         sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
         mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
         sleep 1
-        paopao-pref -server 127.0.0.1 -port 5304 -delay -v
+        paopao-pref -server 127.0.0.1 -port 5304 -delay
         killall mosdns
     done <dns_list.txt
     cat /tmp/delay.txt
@@ -27,7 +27,9 @@ fi
 while read dnsserver; do
     sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
     mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
-    delay=$(paopao-pref -server 127.0.0.1 -port 5304 -delay) && echo "$delay"",""$dnsserver" >>/tmp/delay.txt && echo "$dnsserver"": ""$delay"" ms"
+    sleep 1
+    paopao-pref -server 127.0.0.1 -port 5304 -delay -v
+    killall mosdns
 done </tmp/dns_list.txt
 ser_num=$(cat /tmp/dns_list.txt | wc -l)
 if [ "$ser_num" = "0" ]; then
