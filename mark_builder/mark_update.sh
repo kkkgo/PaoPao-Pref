@@ -80,7 +80,7 @@ cat /data/inrule.txt >>/data/domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 if [ "$TEST" = "debug" ]; then
     cp /data/global_mark.dat /pub/raw.dat
-    paopao-pref -an -inrule /data/global_mark.dat -outrule global_mark_analyze.txt
+    paopao-pref -an -inrule /data/global_mark.dat -outrule /pub/global_mark_analyze.txt
 fi
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz | cut -d" " -f1)
