@@ -16,15 +16,19 @@ if [ "$SYSDNS" = "no" ]; then
         sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
         mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
         sleep 1
-        delay=$(paopao-pref -server 127.0.0.1 -delay) && echo "$delay"",""$dnsserver" >>/tmp/delay.txt && echo "$dnsserver"": ""$delay"" ms"
+        paopao-pref -server 127.0.0.1 -port 5304 -delay -v
         killall mosdns
     done <dns_list.txt
     cat /tmp/delay.txt
     sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list.txt
-    cat /tmp/dns_list.txt
 else
     cat /etc/resolv.conf | grep -Eo "$IPREX4" >/tmp/dns_list.txt
 fi
+while read dnsserver; do
+    sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
+    mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
+    delay=$(paopao-pref -server 127.0.0.1 -port 5304 -delay) && echo "$delay"",""$dnsserver" >>/tmp/delay.txt && echo "$dnsserver"": ""$delay"" ms"
+done </tmp/dns_list.txt
 ser_num=$(cat /tmp/dns_list.txt | wc -l)
 if [ "$ser_num" = "0" ]; then
     echo "no dns available."
@@ -57,12 +61,12 @@ ps
 cat /tmp/force_nocn_list.txt >>/domains.txt
 paopao-pref -inrule /domains.txt -outrule /data/domains.txt
 echo "Start pref..."
-paopao-pref -server 127.0.0.1 >/data/pref.log
+paopao-pref -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
 cat /data/inrule.txt >>/data/domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 if [ "$TEST" = "debug" ]; then
     cp /data/global_mark.dat /pub/raw.dat
-    cp /data/pref.log /pub/
+    cp /tmp/pref.log /pub/
 fi
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz | cut -d" " -f1)
