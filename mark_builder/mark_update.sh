@@ -60,11 +60,14 @@ fi
 mosdns start -d /tmp -c gen_mark.yaml &
 sleep 1
 
-touch domains_ok.txt
 ps
 cat /tmp/force_nocn_list.txt >>/domains.txt
 paopao-pref -inrule /domains.txt -outrule /data/domains.txt
 echo "Start pref..."
+if [ -f domains_ok.txt ]; then
+    rm domains_ok.txt
+    touch domains_ok.txt
+fi
 paopao-pref -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
 if [ "$TEST" = "debug" ]; then
     cp /tmp/pref.log /pub/
