@@ -66,11 +66,17 @@ cat /tmp/force_nocn_list.txt >>/domains.txt
 paopao-pref -inrule /domains.txt -outrule /data/domains.txt
 echo "Start pref..."
 paopao-pref -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
+if [ "$TEST" = "debug" ]; then
+    cp /tmp/pref.log /pub/
+    cp /data/inrule.txt /pub/
+    cp /data/domains_ok.txt /pub/
+    cp /data/domains.txt /pub/
+    cp /domains.txt /pub/domains_raw.txt
+fi
 cat /data/inrule.txt >>/data/domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 if [ "$TEST" = "debug" ]; then
     cp /data/global_mark.dat /pub/raw.dat
-    cp /tmp/pref.log /pub/
 fi
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz | cut -d" " -f1)
