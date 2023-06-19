@@ -1,14 +1,22 @@
 #!/bin/sh
 IPREX4='([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 touch /tmp/inrule.txt
+touch /data/inrule.txt
 if [ -f /pub/tlds.txt ]; then
+    echo apply tlds.
     cat /pub/tlds.txt >>/data/inrule.txt
+    echo "" >>/data/inrule.txt
+    echo "" >>/data/inrule.txt
 fi
 if [ -f /pub/cn.txt ]; then
+    echo apply cn.
     cat /pub/cn.txt >>/tmp/inrule.txt
+    echo "" >>/tmp/inrule.txt
+    echo "" >>/tmp/inrule.txt
 fi
 cat /data/inrule.txt >>/tmp/inrule.txt
-
+echo "" >>/tmp/inrule.txt
+echo "" >>/tmp/inrule.txt
 paopao-pref -inrule /tmp/inrule.txt -outrule /tmp/force_nocn_list.txt
 if [ "$SYSDNS" = "no" ]; then
     touch /tmp/delay.txt
@@ -41,28 +49,28 @@ fi
 ser1=$(head -1 /tmp/dns_list.txt)
 ser2=$(head -2 /tmp/dns_list.txt | tail -1)
 ser3=$(tail -1 /tmp/dns_list.txt)
-cp test_cn.yaml /tmp/gen_mark.yaml
+cp test_cn.yaml /tmp/gen.yaml
 if [ "$ser_num" -gt 0 ]; then
-    sed -i "s/#gen_mark//g" /tmp/gen_mark.yaml
-    sed -i "s/{ser1}/$ser1/g" /tmp/gen_mark.yaml
+    sed -i "s/{ser1}/$ser1/g" /tmp/gen.yaml
 fi
 
 if [ "$ser_num" -gt 1 ]; then
-    sed -i "s/#ser_num2//g" /tmp/gen_mark.yaml
-    sed -i "s/{ser2}/$ser2/g" /tmp/gen_mark.yaml
+    sed -i "s/#ser_num2//g" /tmp/gen.yaml
+    sed -i "s/{ser2}/$ser2/g" /tmp/gen.yaml
 fi
 
 if [ "$ser_num" -gt 2 ]; then
-    sed -i "s/#ser_num3//g" /tmp/gen_mark.yaml
-    sed -i "s/{ser3}/$ser3/g" /tmp/gen_mark.yaml
+    sed -i "s/#ser_num3//g" /tmp/gen.yaml
+    sed -i "s/{ser3}/$ser3/g" /tmp/gen.yaml
 fi
-
+sed "s/#gen_mark//g" /tmp/gen.yaml >/tmp/gen_mark.yaml
 mosdns start -d /tmp -c gen_mark.yaml &
 sleep 1
 
 ps
 cat /tmp/force_nocn_list.txt >>/domains.txt
 paopao-pref -inrule /domains.txt -outrule /data/domains.txt
+
 echo "Start pref..."
 if [ -f domains_ok.txt ]; then
     rm domains_ok.txt
@@ -81,7 +89,19 @@ paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
 if [ "$TEST" = "debug" ]; then
     cp /data/global_mark.dat /pub/raw.dat
     paopao-pref -an -inrule /data/global_mark.dat -outrule /pub/global_mark_analyze.txt
+    cut -d":" -f1 /pub/global_mark_analyze.txt >/pub/global_mark_analyze_raw.txt
+    sed 'p; s/.*/www.&/' /pub/global_mark_analyze_raw.txt >/pub/global_mark_analyze_icptest.txt
+    sed "s/#icp_mark//g" /tmp/gen.yaml >/tmp/icp_mark.yaml
+    mosdns start -d /tmp -c icp_mark.yaml &
+    sleep 1
+    if [ -f domains_ok.txt ]; then
+        rm domains_ok.txt
+        touch domains_ok.txt
+    fi
+    paopao-pref -server 127.0.0.1 -port 5304 -v >/tmp/pref_icp.log
+    paopao-pref -an -inrule /data/domains_ok.txt -outrule /pub/domains_ok_icp.txt
 fi
+
 xz -9 -e global_mark.dat
 datsha=$(sha512sum global_mark.dat.xz | cut -d" " -f1)
 echo -n $datsha >sha.txt
