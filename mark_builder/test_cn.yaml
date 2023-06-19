@@ -44,6 +44,11 @@ plugins:
 #gen_mark        - matches: has_wanted_ans
 #gen_mark          exec: accept
 #gen_mark        - exec: reject 3
+
+#icp_mark        - matches: resp_ip_mmdb $cnip CN
+#icp_mark          exec: accept
+#icp_mark        - exec: reject 3
+
   - tag: udp_server
     type: udp_server
     args:
