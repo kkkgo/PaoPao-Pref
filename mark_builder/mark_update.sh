@@ -2,37 +2,40 @@
 IPREX4='([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|1[0-9][0-9]|2[0-4][0-9]|25[0-5])'
 touch /tmp/inrule.txt
 touch /data/inrule.txt
-if [ -f /pub/tlds.txt ]; then
-    echo apply tlds.
-    cat /pub/tlds.txt >>/data/inrule.txt
-    echo "" >>/data/inrule.txt
-    echo "" >>/data/inrule.txt
-fi
-if [ -f /pub/cn.txt ]; then
-    echo apply cn.
-    cat /pub/cn.txt >>/tmp/inrule.txt
-    echo "" >>/tmp/inrule.txt
-    echo "" >>/tmp/inrule.txt
-fi
-cat /data/inrule.txt >>/tmp/inrule.txt
-echo "" >>/tmp/inrule.txt
-echo "" >>/tmp/inrule.txt
-paopao-pref -inrule /tmp/inrule.txt -outrule /tmp/force_nocn_list.txt
-if [ "$SYSDNS" = "no" ]; then
-    touch /tmp/delay.txt
-    while read dnsserver; do
-        echo "Test "$dnsserver
-        sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
-        mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
-        sleep 1
-        delay=$(paopao-pref -server 127.0.0.1 -port 5304 -delay) && echo "$delay"",""$dnsserver" >>/tmp/delay.txt && echo "$dnsserver"": ""$delay"" ms"
-        killall mosdns
-    done <dns_list.txt
-    cat /tmp/delay.txt
-    sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list.txt
+mkdir -p /predata
+touch /predata/force_nocn_list.txt
+if [ "$EXT" = "yes" ]; then
+    if [ -f /pub/tlds.txt ]; then
+        echo apply tlds.
+        cat /pub/tlds.txt >>/data/inrule.txt
+        echo "" >>/data/inrule.txt
+        echo "" >>/data/inrule.txt
+    fi
+    if [ -f /pub/cn.txt ]; then
+        echo apply cn.
+        cat /pub/cn.txt >>/predata/force_nocn_list.txt
+        echo "" >>/predata/force_nocn_list.txt
+        echo "" >>/predata/force_nocn_list.txt
+    fi
 else
-    cat /etc/resolv.conf | grep -Eo "$IPREX4" >/tmp/dns_list.txt
+    cat /data/inrule.txt >>/predata/force_nocn_list.txt
+    echo "" >>/predata/force_nocn_list.txt
+    echo "" >>/predata/force_nocn_list.txt
+    cat /data/inrule.txt >/predata/inrule.txt
 fi
+paopao-pref -inrule /predata/force_nocn_list.txt -outrule /tmp/force_nocn_list.txt
+cat /etc/resolv.conf | grep -Eo "$IPREX4" >>dns_list.txt
+touch /tmp/delay.txt
+while read dnsserver; do
+    echo "Test "$dnsserver
+    sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
+    mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
+    sleep 1
+    delay=$(paopao-pref -server 127.0.0.1 -port 5304 -delay) && echo "$delay"",""$dnsserver" >>/tmp/delay.txt && echo "$dnsserver"": ""$delay"" ms"
+    killall mosdns
+done <dns_list.txt
+cat /tmp/delay.txt
+sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list.txt
 while read dnsserver; do
     sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
     mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
@@ -79,13 +82,13 @@ fi
 paopao-pref -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
 if [ "$TEST" = "debug" ]; then
     cp /tmp/pref.log /pub/
-    cp /data/inrule.txt /pub/
     cp /data/domains_ok.txt /pub/
     cp /data/domains.txt /pub/
     cp /domains.txt /pub/domains_raw.txt
 fi
-cat /data/inrule.txt >>/data/domains_ok.txt
+cat /predata/inrule.txt >>/data/domains_ok.txt
 paopao-pref -inrule /data/domains_ok.txt -outrule /data/global_mark.dat
+killall mosdns
 if [ "$TEST" = "debug" ]; then
     cp /data/global_mark.dat /pub/raw.dat
     paopao-pref -an -inrule /data/global_mark.dat -outrule /pub/global_mark_analyze.txt
@@ -98,8 +101,10 @@ if [ "$TEST" = "debug" ]; then
         rm domains_ok.txt
         touch domains_ok.txt
     fi
+    cat /pub/global_mark_analyze_icptest.txt >/data/domains.txt
     paopao-pref -server 127.0.0.1 -port 5304 -v >/tmp/pref_icp.log
     paopao-pref -an -inrule /data/domains_ok.txt -outrule /pub/domains_ok_icp.txt
+    cp /tmp/pref_icp.log /pub/
 fi
 
 xz -9 -e global_mark.dat
