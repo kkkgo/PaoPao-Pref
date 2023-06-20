@@ -83,6 +83,7 @@ if [ -f domains_ok.txt ]; then
     touch domains_ok.txt
 fi
 paopao-pref -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
+mkdir -p /pub
 if [ "$TEST" = "debug" ]; then
     cp /tmp/pref.log /pub/
     cp /data/domains_ok.txt /pub/
