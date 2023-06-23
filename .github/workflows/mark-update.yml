@@ -11,15 +11,23 @@ jobs:
   update_mark:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    - name: Update data
-      run: sh update_mark.sh
-    - uses: EndBug/add-and-commit@v9
-      with:
-        author_name: Github Actions
-        author_email: actions@github.com
-        committer_email: actions@github.com
+      - name: login docker
+        run: echo ${{ secrets.TDOCKERHUB_TOKEN }} | docker login ${{ secrets.TDOCKERHUB_LOGIN }} --username ${{ secrets.TDOCKERHUB_USERNAME }} --password-stdin
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: pull
+        run: docker pull ${{ secrets.TDOCKERHUB_TAG }} >/dev/null
+      - name: run
+        run: docker run -d --name data ${{ secrets.TDOCKERHUB_TAG }}
+      - name: cp global_mark.dat.sha256sum
+        run: docker cp data:/pub/global_mark.dat.sha256sum global_mark.dat.sha256sum
+      - name: cp global_mark.dat
+        run: docker cp data:/pub/global_mark.dat global_mark.dat
+      - uses: EndBug/add-and-commit@v9
+        with:
+         author_name: Github Actions
+         author_email: actions@github.com
+         committer_email: actions@github.com
   build_mark:
     needs: update_mark
     runs-on: ubuntu-latest
