@@ -1,11 +1,11 @@
-FROM mark_builder AS data
+FROM sliamb/mark_builder AS data
 WORKDIR /predata/
 COPY tlds.txt /pub/
 COPY cn.txt /pub/
 COPY comp.sh /pub/
 RUN sh /pub/comp.sh
 
-FROM mark_builder
+FROM sliamb/mark_builder
 COPY --from=data /predata/ /predata/
 WORKDIR /data/
 ENV TZ=Asia/Shanghai \
