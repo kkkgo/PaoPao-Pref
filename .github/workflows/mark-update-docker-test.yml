@@ -18,7 +18,7 @@ jobs:
       - name: cp
         run: cp ./data/*.txt ./mark_builder/
       - name: build mark_builder
-        run: docker build -t mark_builder .
+        run: cd mark_builder && docker build -t mark_builder .
       - name: build runner
         run: cd mark_builder && docker build -t runner -f ./runner .
       # - name: comp data
