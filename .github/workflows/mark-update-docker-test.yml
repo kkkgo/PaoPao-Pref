@@ -20,7 +20,7 @@ jobs:
       - name: build mark_builder
         run: docker build -t mark_builder .
       - name: build runner
-        run: cd mark_builder && docker build -t runner -f ./runner
+        run: cd mark_builder && docker build -t runner -f ./runner .
       # - name: comp data
       #   run: wget ${{ secrets.DATA }} -O test
       # - name: test
