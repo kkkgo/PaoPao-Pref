@@ -15,13 +15,9 @@ jobs:
           repository: ${{ secrets.DATA }}
           token: ${{ secrets.GH_TOKEN }}
           path: 'data'
-      - name: cp
-        run: cp ./data/*.txt ./mark_builder/
       - name: build mark_builder
         run: cd mark_builder && docker build -t mark_builder .
+      - name: cp
+        run: cp ./data/*.txt ./mark_builder/
       - name: build runner
         run: cd mark_builder && docker build -t runner -f ./runner .
-      # - name: comp data
-      #   run: wget ${{ secrets.DATA }} -O test
-      # - name: test
-      #   run: ls -lah .
