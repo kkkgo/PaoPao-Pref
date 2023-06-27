@@ -13,6 +13,7 @@ RUN curl -sLo /src/domains.txt https://github.com/kkkgo/PaoPao-Pref/raw/main/dom
     if [ "$domains_size" -gt 10000000 ]; then echo "domains_size pass.";else echo "domains_size failed";cp /domains_size /;exit;fi
 COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 WORKDIR /data
+RUN ls -lah /data && ls -lah /src & wc -l /src/inrule.txt && md5sum /usr/bin/paopao-pref
 RUN paopao-pref -inrule /src/inrule.txt -outrule /data/inrule.txt
 RUN ls -lah /data && ls -lah /src
 RUN cat /data/inrule.txt >> /src/domains.txt
