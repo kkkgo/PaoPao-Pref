@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: build mark_builder
-        run: cd mark_builder && docker build -t mark_builder .
+        run: cd mark_builder && docker build  --progress=plain -t mark_builder .
       - uses: actions/checkout@v3
         with:
           repository: ${{ secrets.DATA }}
