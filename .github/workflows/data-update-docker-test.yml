@@ -1,4 +1,4 @@
-name: update-docker-only
+name: update-pref-docker-only
 
 on:
   workflow_dispatch:
