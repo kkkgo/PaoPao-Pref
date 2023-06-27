@@ -28,6 +28,7 @@ jobs:
          author_name: Github Actions
          author_email: actions@github.com
          committer_email: actions@github.com
+         
   build_mark:
     needs: update_mark
     runs-on: ubuntu-latest
@@ -48,3 +49,24 @@ jobs:
           context: "{{defaultContext}}:mark_builder"
           platforms: linux/amd64
           tags: sliamb/mark_builder:latest
+
+  build_runner:
+    needs: build_mark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ secrets.DATA }}
+          token: ${{ secrets.GH_TOKEN }}
+          path: 'data'
+      - name: cp
+        run: cp ./data/*.txt ./mark_builder/
+      - name: build runner
+        run: cd mark_builder && docker build --no-cache --progress=plain -t runner -f ./runner .
+      - name: login docker
+        run: echo ${{ secrets.TDOCKERHUB_TOKEN }} | docker login ${{ secrets.TDOCKERHUB_LOGIN }} --username ${{ secrets.TDOCKERHUB_USERNAME }} --password-stdin
+      - name: tag
+        run: docker tag runner ${{ secrets.TDOCKERHUB_TAG_RUNNER }}
+      - name: push
+        run: docker push ${{ secrets.TDOCKERHUB_TAG_RUNNER }} >/dev/null
