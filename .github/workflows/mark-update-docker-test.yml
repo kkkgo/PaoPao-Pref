@@ -17,7 +17,7 @@ jobs:
           path: 'data'
       - name: cp
         run: cp ./data/*.txt ./mark_builder/
-      - run: ls -lah .
+      - run: ls -lah mark_builder
       # - name: build mark_builder
       #   run: docker build -t mark_builder .
       # - name: comp data
