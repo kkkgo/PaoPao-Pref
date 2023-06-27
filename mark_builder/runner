@@ -1,5 +1,7 @@
 FROM mark_builder AS data
 WORKDIR /predata/
+COPY tlds.txt /pub/
+COPY cn.txt /pub/
 COPY comp.sh /pub/
 RUN sh /pub/comp.sh
 
