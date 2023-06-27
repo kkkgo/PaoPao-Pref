@@ -14,7 +14,7 @@ RUN curl -sLo /src/domains.txt https://github.com/kkkgo/PaoPao-Pref/raw/main/dom
 COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 WORKDIR /data
 RUN ls -lah /data && ls -lah /src & wc -l /src/inrule.txt && md5sum /usr/bin/paopao-pref
-RUN paopao-pref -inrule /src/inrule.txt -outrule /data/inrule.txt
+RUN paopao-pref -inrule /src/inrule.txt -outrule /data/inrule.txt && ls -lah /data/
 RUN ls -lah /data && ls -lah /src
 RUN cat /data/inrule.txt >> /src/domains.txt
 RUN paopao-pref -inrule /src/domains.txt -outrule /data/domains.txt
