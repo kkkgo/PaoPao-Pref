@@ -1,0 +1,19 @@
+FROM mark_builder AS data
+WORKDIR /predata/
+COPY comp.sh /pub/
+RUN sh /pub/comp.sh
+
+FROM mark_builder
+COPY --from=data /predata/ /predata/
+WORKDIR /data/
+ENV TZ=Asia/Shanghai \
+    DNS_SERVER="" \
+    DNS_PORT="" \
+    DNS_LINE="" \
+    DNS_LIMIT="25" \
+    DNS_TIMEOUT="3s" \
+    DNS_SLEEP="0ms" \
+    TEST="debug" \
+    EXT="yes" \
+    FILE_OUTPUT=yes
+CMD sh mark_update.sh
