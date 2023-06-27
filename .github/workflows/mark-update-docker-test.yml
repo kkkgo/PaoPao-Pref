@@ -10,9 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           repository: ${{ secrets.DATA }}
           token: ${{ secrets.GH_TOKEN }}
+          path: 'data'
+      - name: cp
+        run: cp ./data/* ./mark_builder/
+      - run: ls -lah .
       # - name: build mark_builder
       #   run: docker build -t mark_builder .
       # - name: comp data
