@@ -9,11 +9,11 @@ plugins:
     args:
       file: "/data/Country-only-cn-private.mmdb"
 
-  - tag: "force_nocn_list"
+  - tag: "force_list"
     type: "domain_set"
     args:
       files:
-        - "/tmp/force_nocn_list.txt"
+        - "/tmp/force_list.txt"
 
   - tag: test_cn
     type: forward
@@ -29,7 +29,7 @@ plugins:
     args:
 #dns_check        - matches: "qtype 28"
 #dns_check          exec: reject 5
-#gen_mark        - matches: qname $force_nocn_list
+#gen_mark        - matches: qname $force_list
 #gen_mark          exec: reject 5
         - exec: $test_cn
 #dns_check        - matches: resp_ip_mmdb $cnip CN
@@ -45,6 +45,8 @@ plugins:
 #gen_mark          exec: accept
 #gen_mark        - exec: reject 3
 
+#icp_mark        - matches: qname $force_list
+#icp_mark          exec: reject 5
 #icp_mark        - matches: resp_ip_mmdb $cnip CN
 #icp_mark          exec: accept
 #icp_mark        - exec: reject 3

@@ -24,6 +24,6 @@ curl -sLo /src/domains.txt https://github.com/kkkgo/PaoPao-Pref/raw/main/domains
     fi
 mkdir -p /data
 
-paopao-pref -inrule /src/inrule.txt -outrule /data/inrule.txt
-cat /data/inrule.txt >>/src/domains.txt
+paopao-pref -inrule /src/inrule.txt -outrule /data/fwrule.txt
 paopao-pref -inrule /src/domains.txt -outrule /data/domains.txt
+cp /src/domains.txt /data/domains_raw.txt
