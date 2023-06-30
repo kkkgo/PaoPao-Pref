@@ -17,6 +17,7 @@ gen_dns() {
         cat /tmp/delay.txt
         sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list.txt
     fi
+    touch /tmp/force_list.txt
     while read dnsserver; do
         sed "s/{ser1}/$dnsserver/g" test_cn.yaml | sed "s/#dns_check//g" >/tmp/test_cn.yaml
         mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
@@ -100,7 +101,7 @@ pref_start_mark() {
         rm domains_ok.txt
         touch domains_ok.txt
     fi
-    paopao-pref /data/pfdata.txt -file -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
+    paopao-pref -file /data/pfdata.txt -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
 }
 
 pref_start_cn() {
@@ -109,7 +110,7 @@ pref_start_cn() {
         rm domains_ok.txt
         touch domains_ok.txt
     fi
-    paopao-pref /data/domains_raw.txt -file -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
+    paopao-pref -file /data/domains_raw.txt -server 127.0.0.1 -port 5304 -v >/tmp/pref.log
 }
 
 global_debug() {
@@ -161,7 +162,6 @@ gen_dat() {
         paopao-pref -an -inrule /data/global_mark_cn.dat -outrule /pub/debug/cn/global_mark_cn_analyze.txt
     fi
     sed -ir "s/^domain:/^##@@domain:/g" /data/global_mark_cn.dat
-
     echo "" >/tmp/global_mark.dat
     cat /data/global_mark_global.dat >>/tmp/global_mark.dat
     echo "" >>/tmp/global_mark.dat
