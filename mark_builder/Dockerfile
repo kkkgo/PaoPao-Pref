@@ -9,8 +9,9 @@ RUN apk add --no-cache curl xz
 COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 COPY --from=sliamb/prebuild-paopaodns /src/mosdns /usr/bin/
 COPY --from=download /src/Country-only-cn-private.mmdb /data/
-COPY --from=download /data/inrule.txt /data/
-COPY --from=download /data/domains.txt /
+COPY --from=download /data/fwrule.txt /data/
+COPY --from=download /data/domains.txt /data/
+COPY --from=download /data/domains_raw.txt /data/
 COPY dns_list.txt /data/
 COPY test_cn.yaml /data/
 COPY mark_update.sh /data/

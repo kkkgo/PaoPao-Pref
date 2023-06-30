@@ -1,8 +1,7 @@
 FROM sliamb/mark_builder AS data
 WORKDIR /predata/
-COPY tlds.txt /pub/
-COPY cn.txt /pub/
-COPY comp.sh /pub/
+COPY tlds.txt /predata/
+COPY cn.txt /predata/
 RUN sh /pub/comp.sh
 
 FROM sliamb/mark_builder
