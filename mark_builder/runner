@@ -2,7 +2,8 @@ FROM sliamb/mark_builder AS data
 WORKDIR /predata/
 COPY tlds.txt /predata/
 COPY cn.txt /predata/
-RUN sh /pub/comp.sh
+COPY comp.sh /comp.sh
+RUN sh /comp.sh
 
 FROM sliamb/mark_builder
 COPY --from=data /predata/ /predata/
