@@ -136,7 +136,9 @@ gen_dat() {
         echo "" >>/tmp/global_mark.txt
         paopao-pref -inrule /tmp/global_mark.txt -outrule /data/global_mark.dat
     else
-        cat /predata/force_list_global.txt >/tmp/global_mark.txt
+        cat /predata/tlds.txt >/tmp/global_mark.txt
+        echo "" >>/tmp/global_mark.txt
+        cat /data/fwrule.txt >>/tmp/global_mark.txt
         echo "" >>/tmp/global_mark.txt
         cat /data/domains_ok.txt >>/tmp/global_mark.txt
         echo "" >>/tmp/global_mark.txt

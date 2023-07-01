@@ -24,4 +24,5 @@ cat /data/domains.txt >>/tmp/pfdata.txt
 echo "" >>/tmp/pfdata.txt
 cat /pub/tlds.txt >>/tmp/pfdata.txt
 echo "" >>/tmp/pfdata.txt
+cat /pub/cn.txt >>/tmp/pfdata.txt
 paopao-pref -inrule /tmp/pfdata.txt -outrule /predata/pfdata.txt
