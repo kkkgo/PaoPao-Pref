@@ -4,6 +4,8 @@ cat /pub/tlds.txt >/tmp/force_list_global.txt
 echo "" >>/tmp/force_list_global.txt
 cat /data/fwrule.txt >>/tmp/force_list_global.txt
 echo "" >>/tmp/force_list_global.txt
+cat /pub/cn.txt >>/tmp/force_list_global.txt
+echo "" >>/tmp/force_list_global.txt
 paopao-pref -inrule /tmp/force_list_global.txt -outrule /predata/force_list_global.txt
 paopao-pref -inrule /pub/tlds.txt -outrule /predata/tlds.txt
 
