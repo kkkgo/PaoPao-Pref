@@ -161,7 +161,7 @@ gen_dat() {
     if [ "$TEST" = "debug" ]; then
         paopao-pref -an -inrule /data/global_mark_cn.dat -outrule /pub/debug/cn/global_mark_cn_analyze.txt
     fi
-    sed -ir "s/^domain:/^##@@domain:/g" /data/global_mark_cn.dat
+    sed -ir "s/^domain:/##@@domain:/g" /data/global_mark_cn.dat
     echo "" >/tmp/global_mark.dat
     cat /data/global_mark_global.dat >>/tmp/global_mark.dat
     echo "" >>/tmp/global_mark.dat
