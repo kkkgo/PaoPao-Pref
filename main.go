@@ -605,14 +605,9 @@ func processCNFile(cnFile string, globalKeywords []string, resultFile string, gl
 
 		found := false
 		for _, globalKeyword := range globalKeywords {
-			fmt.Print("  compare:", keyword, "|", globalKeyword)
 			if strings.Contains(keyword, globalKeyword) {
 				found = true
-				fmt.Print(":yes\n")
 				break
-			} else {
-				fmt.Print(":no\n")
-
 			}
 		}
 
