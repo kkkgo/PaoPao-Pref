@@ -603,18 +603,13 @@ func processCNFile(cnFile string, globalKeywords []string, resultFile string, gl
 		line := cnScanner.Text()
 		keyword := strings.TrimPrefix(line, "domain:")
 
-		found := false
 		for _, globalKeyword := range globalKeywords {
 			if strings.Contains(keyword, globalKeyword) {
-				found = true
+				fmt.Fprintln(result, strings.Replace(line, "domain:", "##@@domain:", 1))
 				break
 			}
 		}
 
-		if found {
-			line = strings.Replace(line, "domain:", "##@@domain:", 1)
-			fmt.Fprintln(result, line)
-		}
 	}
 	fmt.Fprintln(result)
 
