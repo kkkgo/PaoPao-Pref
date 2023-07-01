@@ -5,6 +5,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"net/url"
 	"os"
@@ -20,6 +21,9 @@ import (
 
 var (
 	file     string
+	gbfile   string
+	cnfile   string
+	comp     string
 	inrule   string
 	outrule  string
 	limit    int
@@ -44,6 +48,9 @@ var domainRegex = regexp.MustCompile(`^[A-Za-z0-9.][a-zA-Z0-9.-]+\.[a-zA-Z]{2}[a
 
 func init() {
 	flag.StringVar(&file, "file", "domains.txt", "text file containing domain names")
+	flag.StringVar(&gbfile, "gbfile", "", "comp")
+	flag.StringVar(&cnfile, "cnfile", "", "comp")
+	flag.StringVar(&comp, "comp", "", "comp gb cn result file.")
 	flag.StringVar(&inrule, "inrule", "", "input proxy rule")
 	flag.StringVar(&outrule, "outrule", "", "output proxy rule.")
 	flag.IntVar(&limit, "limit", 10, "concurrency limit")
@@ -64,6 +71,9 @@ func main() {
 	if help {
 		flag.Usage()
 		os.Exit(0)
+	}
+	if comp != "" {
+		os.Exit(comp_dat())
 	}
 	if analyze {
 		inputFile := inrule
@@ -461,12 +471,11 @@ func convertRules(inputFile, outputFile string) error {
 			return err
 		}
 	}
-
+	fmt.Fprintln(writer, "")
 	err = writer.Flush()
 	if err != nil {
 		return err
 	}
-
 	fmt.Println("Conversion completed successfully.")
 	return nil
 }
@@ -518,4 +527,105 @@ func extractMainDomain(domain string) string {
 		return domain
 	}
 	return parts[len(parts)-2] + "." + parts[len(parts)-1]
+}
+
+func comp_dat() int {
+	globalKeywords, err := readKeywords(gbfile)
+	if err != nil {
+		fmt.Printf("read global failed：%v\n", err)
+		return 1
+	}
+
+	if err := processCNFile(cnfile, globalKeywords, comp, gbfile); err != nil {
+		fmt.Printf("comp cn failed：%v\n", err)
+		return 1
+	}
+
+	fmt.Println("comp finish!")
+	return 0
+}
+
+func readKeywords(filename string) ([]string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var keywords []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		keyword := strings.TrimPrefix(line, "domain:")
+		keywords = append(keywords, keyword)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return keywords, nil
+}
+func processCNFile(cnFile string, globalKeywords []string, resultFile string, globalFile string) error {
+	cn, err := os.Open(cnFile)
+	if err != nil {
+		return err
+	}
+	defer cn.Close()
+
+	result, err := os.Create(resultFile)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintln(result)
+
+	defer result.Close()
+
+	global, err := os.Open(globalFile)
+	if err != nil {
+		return err
+	}
+	defer global.Close()
+
+	_, err = io.Copy(result, global)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintln(result)
+	fmt.Fprintln(result)
+
+	cnScanner := bufio.NewScanner(cn)
+	for cnScanner.Scan() {
+		line := cnScanner.Text()
+		keyword := strings.TrimPrefix(line, "domain:")
+
+		found := false
+		for _, globalKeyword := range globalKeywords {
+			fmt.Print("  compare:", keyword, "|", globalKeyword)
+			if strings.Contains(keyword, globalKeyword) {
+				found = true
+				fmt.Print(":yes\n")
+				break
+			} else {
+				fmt.Print(":no\n")
+
+			}
+		}
+
+		if found {
+			line = strings.Replace(line, "domain:", "##@@domain:", 1)
+			fmt.Fprintln(result, line)
+		}
+	}
+	fmt.Fprintln(result)
+
+	if err := cnScanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
