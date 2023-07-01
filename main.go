@@ -604,7 +604,7 @@ func processCNFile(cnFile string, globalKeywords []string, resultFile string, gl
 		keyword := strings.TrimPrefix(line, "domain:")
 
 		for _, globalKeyword := range globalKeywords {
-			if strings.Contains(keyword, globalKeyword) {
+			if strings.HasSuffix(keyword, globalKeyword) {
 				fmt.Fprintln(result, strings.Replace(line, "domain:", "##@@domain:", 1))
 				break
 			}
