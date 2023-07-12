@@ -8,7 +8,7 @@ go mod init paopao-perf
 go get -u
 go build -ldflags "-s -w" -trimpath -o ./paopao-pref
 export FILE_OUTPUT=yes
-export DNS_LIMIT=10
+export DNS_LIMIT=15
 export DNS_SLEEP=0ms
 export DNS_TIMEOUT=3s
 touch domains_ok.txt
