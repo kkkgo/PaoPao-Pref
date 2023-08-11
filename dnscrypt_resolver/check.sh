@@ -21,7 +21,7 @@ local_lookup() {
     sudo killall dnscrypt-proxy
     server_name=$1
     domain_name=$2
-    echo "server_names = [ '$server_name' ]" | cat - /tmp/dnsex.toml >/tmp/test_now.toml
+    sed "1i server_names = [ '$server_name' ]" /tmp/dnsex.toml >/tmp/test_now.toml
     cat /tmp/test_now.toml
     sudo /usr/sbin/dnscrypt-proxy -config /tmp/test_now.toml &
     sleep 1
