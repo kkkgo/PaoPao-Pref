@@ -16,13 +16,13 @@ dnscrypt-proxy -config /tmp/dnsex.toml &
 sleep 5
 
 local_lookup() {
-    killall dnscrypt-proxy
+    killall dnscrypt-proxy >/dev/null 2>&1 &
     server_name=$1
     domain_name=$2
     sed "1i server_names = [ '$server_name' ]" /tmp/dnsex.toml >/tmp/test_now.toml
     dnscrypt-proxy -config /tmp/test_now.toml >/dev/null 2>&1 &
     test_res=$(dig @127.0.0.1 -p5302 "$domain_name")
-    killall dnscrypt-proxy
+    killall dnscrypt-proxy >/dev/null 2>&1 &
     echo "$test_res"
 }
 
