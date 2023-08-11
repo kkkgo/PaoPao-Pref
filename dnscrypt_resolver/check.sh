@@ -13,19 +13,27 @@ sed -i -r "s/listen_addresses.+/listen_addresses = ['0.0.0.0:5302']/g" /tmp/dnse
 sed -i -r "s/^server_names.+//g" /tmp/dnsex.toml
 cat /tmp/dnsex.toml
 dnscrypt-proxy -config /tmp/dnsex.toml &
-sleep 5
+sleep 10
 
 local_lookup() {
     killall dnscrypt-proxy >/dev/null 2>&1 &
     server_name=$1
-    domain_name=$2
     sed "1i server_names = [ '$server_name' ]" /tmp/dnsex.toml >/tmp/test_now.toml
     dnscrypt-proxy -config /tmp/test_now.toml >/dev/null 2>&1 &
-    test_res=$(dig @127.0.0.1 -p5302 "$domain_name")
+    test_res=$(dig @127.0.0.1 -p5302 local.03k.org a )
     killall dnscrypt-proxy >/dev/null 2>&1 &
     echo "$test_res"
 }
 
+again_lookup(){
+    killall dnscrypt-proxy >/dev/null 2>&1 &
+    server_name=$1
+    sed "1i server_names = [ '$server_name' ]" /tmp/dnsex.toml >/tmp/test_now.toml
+    dnscrypt-proxy -config /tmp/test_now.toml >/dev/null 2>&1 &
+    test_res=$(dig @127.0.0.1 -p5302 gmail.com mx )
+    killall dnscrypt-proxy >/dev/null 2>&1 &
+    echo "$test_res"
+}
 # test
 touch /tmp/bad_new.txt
 cat /data/ban_list.txt >>/tmp/bad_new.txt
@@ -33,11 +41,11 @@ testrec=$(nslookup local.03k.org)
 if echo "$testrec" | grep -q "10.9.8.7"; then
     echo "Ready to test..."
     while read sdns; do
-        test=$(local_lookup "$sdns" local.03k.org)
+        test=$(local_lookup "$sdns")
         if echo "$test" | grep -q "10.9.8.7"; then
             echo "$sdns"": OK."
         else
-            again_test=$(local_lookup "$sdns" gmail.com)
+            again_test=$(again_lookup "$sdns")
             if echo "$again_test" | grep -q "smtp"; then
                 echo "$sdns"": LOCAL BAD."
                 echo "$sdns" >>/tmp/bad_new.txt
