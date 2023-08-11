@@ -4,6 +4,7 @@ sudo apt-get -qq install dnscrypt-proxy git dnsutils
 git clone https://github.com/DNSCrypt/dnscrypt-resolvers.git --depth 1 /tmp/dnscrypt-resolvers
 grep -E "##" /tmp/dnscrypt-resolvers/v3/public-resolvers.md >/tmp/dnscrypt-resolvers/dnstest_alldns.txt
 cut -d" " -f2 /tmp/dnscrypt-resolvers/dnstest_alldns.txt | sort -u >/tmp/name_list.txt
+echo "" >>/tmp/name_list.txt
 cat /tmp/name_list.txt
 
 # config dnscrypt
@@ -36,6 +37,7 @@ testrec=$(nslookup local.03k.org)
 if echo "$testrec" | grep -q "10.9.8.7"; then
     echo "Ready to test..."
     while read sdns; do
+        local_lookup "$sdns" local.03k.org
         test=$(local_lookup "$sdns" local.03k.org)
         if echo "$test" | grep -q "10.9.8.7"; then
             echo "$sdns"": OK."
