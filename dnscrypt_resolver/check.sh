@@ -33,7 +33,6 @@ testrec=$(nslookup local.03k.org)
 if echo "$testrec" | grep -q "10.9.8.7"; then
     echo "Ready to test..."
     while read sdns; do
-        local_lookup "$sdns" local.03k.org
         test=$(local_lookup "$sdns" local.03k.org)
         if echo "$test" | grep -q "10.9.8.7"; then
             echo "$sdns"": OK."
