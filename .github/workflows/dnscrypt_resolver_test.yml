@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 jobs:
-  update_data:
+  check_dnscrypt_resolver:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
