@@ -13,6 +13,7 @@ grep -v "#" /tmp/dnscrypt-proxy/dnscrypt-proxy/example-dnscrypt-proxy.toml | gre
 sed -i -r "s/listen_addresses.+/listen_addresses = ['0.0.0.0:5302']/g" /tmp/dnsex.toml
 sed -i -r "s/server_names.+//g" /tmp/dnsex.toml
 cat /tmp/dnsex.toml
+type dnscrypt-proxy
 sudo dnscrypt-proxy -config /tmp/dnsex.toml >/dev/null 2>&1 &
 sleep 5
 
