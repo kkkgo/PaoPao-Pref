@@ -17,7 +17,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Update data
+    - name: check dnscrypt_resolver
       run: sh dnscrypt_resolver/check.sh
     - uses: EndBug/add-and-commit@v9
       with:
