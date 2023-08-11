@@ -15,23 +15,11 @@ cat /tmp/dnsex.toml
 dnscrypt-proxy -config /tmp/dnsex.toml &
 sleep 10
 
-local_lookup() {
-    killall dnscrypt-proxy >/dev/null 2>&1 &
-    server_name=$1
-    sed "1i server_names = [ '$server_name' ]" /tmp/dnsex.toml >/tmp/test_now.toml
-    dnscrypt-proxy -config /tmp/test_now.toml >/dev/null 2>&1 &
-    test_res=$(dig @127.0.0.1 -p5302 local.03k.org a)
-    killall dnscrypt-proxy >/dev/null 2>&1 &
-    echo "$test_res"
-}
-
 conn_lookup() {
-    killall dnscrypt-proxy >/dev/null 2>&1 &
     server_name=$1
     sed "1i server_names = [ '$server_name' ]" /tmp/dnsex.toml >/tmp/test_now.toml
     dnscrypt-proxy -config /tmp/test_now.toml >/dev/null 2>&1 &
     test_res=$(dig @127.0.0.1 -p5302 gmail.com mx)
-    killall dnscrypt-proxy >/dev/null 2>&1 &
     echo "$test_res"
 }
 # test
@@ -41,14 +29,22 @@ testrec=$(nslookup local.03k.org)
 if echo "$testrec" | grep -q "10.9.8.7"; then
     echo "Ready to test..."
     while read sdns; do
+        killall dnscrypt-proxy >/dev/null 2>&1 &
         conn_test=$(conn_lookup "$sdns")
         if echo "$conn_test" | grep -q "smtp"; then
-            test=$(local_lookup "$sdns")
-            if echo "$test" | grep -q "10.9.8.7"; then
+            if dig @127.0.0.1 -p5302 local.03k.org a | grep -q "10.9.8.7"; then
                 echo "$sdns"": OK."
             else
-                echo "$sdns"": LOCAL BAD."
-                echo "$sdns" >>/tmp/bad_new.txt
+                if dig @127.0.0.1 -p5302 local.03k.org a | grep -q "10.9.8.7"; then
+                    echo "$sdns"": OK."
+                else
+                    if dig @127.0.0.1 -p5302 gmail.com mx | grep -q "smtp"; then
+                        echo "$sdns"": LOCAL BAD."
+                        echo "$sdns" >>/tmp/bad_new.txt
+                    else
+                        echo "$sdns"": CONNECT BAD."
+                    fi
+                fi
             fi
         else
             echo "$sdns"": CONNECT BAD."
