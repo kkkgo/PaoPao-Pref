@@ -22,6 +22,7 @@ local_lookup() {
     server_name=$1
     domain_name=$2
     sed "1i server_names = [ '$server_name' ]" /tmp/dnsex.toml >/tmp/test_now.toml
+    cat /tmp/test_now.toml
     sudo /usr/sbin/dnscrypt-proxy -config /tmp/test_now.toml &
     sleep 1
     test_res=$(dig @127.0.0.1 -p5302 "$domain_name")
