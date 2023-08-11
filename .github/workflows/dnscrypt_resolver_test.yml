@@ -1,4 +1,4 @@
-name: update_data
+name: dnscrypt_resolver_test
 on:
   push:
     paths-ignore:
