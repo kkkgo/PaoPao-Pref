@@ -1,0 +1,12 @@
+adfilter-adl
+ahadns-doh-la
+ams-ads-doh-nl
+dct-at1
+dct-nl1
+dct-ru1
+doh.tiar.app
+jp.tiar.app
+jp.tiarap.org
+publicarray-au2-doh
+sby-doh-limotelu
+sby-limotelu
