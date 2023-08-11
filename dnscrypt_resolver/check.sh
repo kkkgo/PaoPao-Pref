@@ -11,7 +11,7 @@ cat /tmp/name_list.txt
 git clone https://github.com//DNSCrypt/dnscrypt-proxy --depth 1 /tmp/dnscrypt-proxy
 grep -v "#" /tmp/dnscrypt-proxy/dnscrypt-proxy/example-dnscrypt-proxy.toml | grep . >/tmp/dnsex.toml
 sed -i -r "s/listen_addresses.+/listen_addresses = ['0.0.0.0:5302']/g" /tmp/dnsex.toml
-sed -i -r "s/server_names.+//g" /tmp/dnsex.toml
+sed -i -r "s/^server_names.+//g" /tmp/dnsex.toml
 cat /tmp/dnsex.toml
 type dnscrypt-proxy
 sudo /usr/sbin/dnscrypt-proxy -config /tmp/dnsex.toml &
@@ -22,7 +22,6 @@ local_lookup() {
     server_name=$1
     domain_name=$2
     sed "1i server_names = [ '$server_name' ]" /tmp/dnsex.toml >/tmp/test_now.toml
-    cat /tmp/test_now.toml
     sudo /usr/sbin/dnscrypt-proxy -config /tmp/test_now.toml &
     sleep 1
     test_res=$(dig @127.0.0.1 -p5302 "$domain_name")
@@ -37,7 +36,6 @@ testrec=$(nslookup local.03k.org)
 if echo "$testrec" | grep -q "10.9.8.7"; then
     echo "Ready to test..."
     while read sdns; do
-    local_lookup "$sdns" local.03k.org
         test=$(local_lookup "$sdns" local.03k.org)
         if echo "$test" | grep -q "10.9.8.7"; then
             echo "$sdns"": OK."
