@@ -13,18 +13,18 @@ grep -v "#" /tmp/dnscrypt-proxy/dnscrypt-proxy/example-dnscrypt-proxy.toml | gre
 sed -i -r "s/listen_addresses.+/listen_addresses = ['0.0.0.0:5302']/g" /tmp/dnsex.toml
 sed -i -r "s/server_names.+//g" /tmp/dnsex.toml
 cat /tmp/dnsex.toml
-dnscrypt-proxy -config /tmp/dnsex.toml >/dev/null 2>&1 &
+sudo dnscrypt-proxy -config /tmp/dnsex.toml >/dev/null 2>&1 &
 sleep 5
 
 local_lookup() {
-    killall dnscrypt-proxy
+    sudo killall dnscrypt-proxy
     server_name=$1
     domain_name=$2
     echo "server_names = [ '$server_name' ]" | cat - /tmp/dnsex.toml >/tmp/test_now.toml
-    dnscrypt-proxy -config /tmp/test_now.toml >/dev/null 2>&1 &
+    sudo dnscrypt-proxy -config /tmp/test_now.toml >/dev/null 2>&1 &
     sleep 1
     test_res=$(dig @127.0.0.1 -p5302 "$domain_name")
-    killall dnscrypt-proxy
+    sudo killall dnscrypt-proxy
     echo "$test_res"
 }
 
