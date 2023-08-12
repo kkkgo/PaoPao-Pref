@@ -38,7 +38,7 @@ if echo "$testrec" | grep -q "10.9.8.7"; then
                 if dig @127.0.0.1 -p5302 local.03k.org a | grep -q "10.9.8.7"; then
                     echo "$sdns"": OK."
                 else
-                    if dig @127.0.0.1 -p5302 gmail.com mx | grep -q "smtp"; then
+                    if dig @127.0.0.1 -p5302 03k.org mx | grep -q "qq.com"; then
                         echo "$sdns"": LOCAL BAD."
                         echo "$sdns" >>/tmp/bad_new.txt
                     else
