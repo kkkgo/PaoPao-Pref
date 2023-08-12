@@ -2,8 +2,10 @@ adfilter-adl
 adfilter-per
 adfilter-syd
 ahadns-doh-la
+ahadns-doh-nl
 ams-ads-doh-nl
 ams-dnscrypt-nl
+ams-doh-nl
 brahma-world
 dct-at1
 dct-nl1
