@@ -21,5 +21,6 @@ jp.tiarap.org
 publicarray-au2-doh
 sby-doh-limotelu
 sby-limotelu
+sth-ads-doh-se
 sth-dnscrypt-se
 sth-doh-se
