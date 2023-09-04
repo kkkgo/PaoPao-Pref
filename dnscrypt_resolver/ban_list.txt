@@ -26,6 +26,8 @@ dnscry.pt-losangeles-ipv4
 dnscry.pt-madrid-ipv4
 dnscry.pt-miami-ipv4
 dnscry.pt-montreal-ipv4
+dnscry.pt-mumbai-ipv4
+dnscry.pt-munich-ipv4
 dnscry.pt-newyork-ipv4
 dnscry.pt-philadelphia-ipv4
 dnscry.pt-saltlakecity-ipv4
@@ -36,6 +38,7 @@ dnscry.pt-taipeh-ipv4
 dnscry.pt-tallinn-ipv4
 dnscry.pt-tokyo-ipv4
 dnscry.pt-vienna-ipv4
+dnscry.pt-warsaw-ipv4
 doh-ibksturm
 doh.tiar.app
 doh.tiar.app-doh
