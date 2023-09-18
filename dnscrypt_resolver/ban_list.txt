@@ -32,6 +32,7 @@ dnscry.pt-newyork-ipv4
 dnscry.pt-philadelphia-ipv4
 dnscry.pt-saltlakecity-ipv4
 dnscry.pt-sandefjord-ipv4
+dnscry.pt-singapore-ipv4
 dnscry.pt-sofia-ipv4
 dnscry.pt-stockholm-ipv4
 dnscry.pt-sydney-ipv4
