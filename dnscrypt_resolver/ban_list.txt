@@ -41,6 +41,7 @@ dnscry.pt-tallinn-ipv4
 dnscry.pt-tokyo-ipv4
 dnscry.pt-vienna-ipv4
 dnscry.pt-warsaw-ipv4
+dnslow.me
 doh-ibksturm
 doh.tiar.app
 doh.tiar.app-doh
