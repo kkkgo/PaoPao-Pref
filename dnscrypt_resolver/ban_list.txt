@@ -8,6 +8,7 @@ ams-dnscrypt-nl
 ams-doh-nl
 brahma-world
 dct-at1
+dct-nl1
 dct-ru1
 doh-ibksturm
 doh.tiar.app
