@@ -1,5 +1,5 @@
 log:
-    file: "/dev/null"
+    file: ""
     level: error
 
 plugins:
@@ -9,50 +9,76 @@ plugins:
     args:
       file: "/data/Country-only-cn-private.mmdb"
 
-  - tag: "force_list"
+  - tag: "skip_list"
     type: "domain_set"
     args:
-      files:
-        - "/tmp/force_list.txt"
+      exps:
+        - "google.com"
+#gen_mark      files:
+#gen_mark        - "/data/mark.skip.rules"
 
   - tag: test_cn
     type: forward
     args:
-      concurrent: 3
+      concurrent: 2
       upstreams:
-        - addr: "udp://{ser1}:53"
-#ser_num2        - addr: "udp://{ser2}"
-#ser_num3        - addr: "udp://{ser3}"
+        - addr: "udp://2.3.4.5:53"
+        - addr: "udp://3.4.5.6:53"
 
-  - tag: main_sequence
+  - tag: test_dns
+    type: forward
+    args:
+      upstreams:
+        - addr: "udp://1.2.3.4:53"
+
+  - tag: dns_check
     type: sequence
     args:
-#dns_check        - matches: "qtype 28"
-#dns_check          exec: reject 5
-#gen_mark        - matches: qname $force_list
-#gen_mark          exec: reject 5
+        - matches: "qtype 28"
+          exec: reject 5
+        - exec: $test_dns
+        - matches: resp_ip_mmdb $cnip CN
+          exec: ok
+        - exec: reject 3
+
+  - tag: dns_mark
+    type: sequence
+    args:
+        - matches: qname $skip_list
+          exec: reject 5
         - exec: $test_cn
-#dns_check        - matches: resp_ip_mmdb $cnip CN
-#dns_check          exec: accept
-#dns_check        - exec: reject 3
+        - matches: resp_ip_mmdb $cnip CN
+          exec: reject 3
+        - matches: resp_ip_mmdb $cnip PRIVATE
+          exec: reject 3
+        - matches: has_wanted_ans
+          exec: ok
+        - exec: reject 3
 
+  - tag: dns_cn_mark
+    type: sequence
+    args:
+        - matches: qname $skip_list
+          exec: reject 5
+        - exec: $test_cn
+        - matches: resp_ip_mmdb $cnip CN
+          exec: ok
+        - exec: reject 3
 
-#gen_mark        - matches: resp_ip_mmdb $cnip CN
-#gen_mark          exec: reject 3
-#gen_mark        - matches: resp_ip_mmdb $cnip PRIVATE
-#gen_mark          exec: reject 3
-#gen_mark        - matches: has_wanted_ans
-#gen_mark          exec: accept
-#gen_mark        - exec: reject 3
-
-#icp_mark        - matches: qname $force_list
-#icp_mark          exec: reject 5
-#icp_mark        - matches: resp_ip_mmdb $cnip CN
-#icp_mark          exec: accept
-#icp_mark        - exec: reject 3
-
-  - tag: udp_server
+  - tag: udp_server_dns_check
     type: udp_server
     args:
-      entry: main_sequence
-      listen: :5304
+      entry: dns_check
+      listen: :5301
+
+  - tag: udp_server_dns_mark
+    type: udp_server
+    args:
+      entry: dns_mark
+      listen: :5302
+
+  - tag: udp_server_dns_cn_mark
+    type: udp_server
+    args:
+      entry: dns_cn_mark
+      listen: :5303
