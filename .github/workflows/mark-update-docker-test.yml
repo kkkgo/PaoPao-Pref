@@ -16,9 +16,9 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           path: 'data'
       - name: cp
-        run: cp ./data/*.txt ./mark_builder/
+        run: cp ./data/*.rules ./mark_builder/
       - name: build runner
-        run: cd mark_builder && docker build --no-cache --progress=plain -t runner -f ./runner .
+        run: cd mark_builder && docker build --no-cache --progress=plain -t runner .
       - name: login docker
         run: echo ${{ secrets.TDOCKERHUB_TOKEN }} | docker login ${{ secrets.TDOCKERHUB_LOGIN }} --username ${{ secrets.TDOCKERHUB_USERNAME }} --password-stdin
       - name: tag
