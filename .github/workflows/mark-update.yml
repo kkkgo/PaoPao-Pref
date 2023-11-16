@@ -2,8 +2,8 @@ name: mark-update-4
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '00 15 * * 4'
+  # schedule:
+  #   - cron: '00 15 * * 4'
 permissions:
   contents: write
 
