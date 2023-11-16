@@ -16,7 +16,7 @@ gen_dns() {
     cat /tmp/delay.txt
     sort -n /tmp/delay.txt | cut -d "," -f2 | head -3 >/tmp/dns_list_gen.txt
     while read dnsserver; do
-        sed "s/1.2.3.4/$dnsserver/g" test_cn.yaml >/tmp/test_cn.yaml
+        sed "s/1\.2\.3\.4/$dnsserver/g" test_cn.yaml >/tmp/test_cn.yaml
         mosdns start -d /tmp -c test_cn.yaml >/dev/null 2>&1 &
         sleep 1
         paopao-pref -server 127.0.0.1 -port 5301 -delay -v
@@ -31,11 +31,11 @@ gen_dns() {
     ser1=$(head -1 /tmp/dns_list_gen.txt)
     ser2=$(head -2 /tmp/dns_list_gen.txt | tail -1)
     cp test_cn.yaml /tmp/gen.yaml
-    sed -i "s/2.3.4.5/$ser1/g" /tmp/gen.yaml
+    sed -i "s/6\.7\.8\.9/$ser1/g" /tmp/gen.yaml
     if [ "$ser_num" -gt 1 ]; then
-        sed -i "s/3.4.5.6/$ser2/g" /tmp/gen.yaml
+        sed -i "s/9\.8\.7\.6/$ser2/g" /tmp/gen.yaml
     else
-        sed -i "/3.4.5.6/d" /tmp/gen.yaml
+        sed -i "/9\.8\.7\.6/d" /tmp/gen.yaml
     fi
 }
 

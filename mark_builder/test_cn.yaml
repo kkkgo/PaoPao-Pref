@@ -22,8 +22,8 @@ plugins:
     args:
       concurrent: 2
       upstreams:
-        - addr: "udp://2.3.4.5:53"
-        - addr: "udp://3.4.5.6:53"
+        - addr: "udp://6.7.8.9:53"
+        - addr: "udp://9.8.7.6:53"
 
   - tag: test_dns
     type: forward
