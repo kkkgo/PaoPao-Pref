@@ -71,6 +71,8 @@ gen_global() {
     echo "" >>/data/global.rules
     paopao-pref -inrule /data/global.rules -outrule /data/global_mark_global.dat
     if [ "$TEST" = "debug" ]; then
+        mkdir -p /pub/debug/global/
+        touch /pub/debug/global/global_mark_global_analyze.txt
         paopao-pref -an -inrule /data/global_mark_global.dat -outrule /pub/debug/global/global_mark_global_analyze.txt
     fi
 }
@@ -83,6 +85,8 @@ gen_cn() {
     echo "" >>/tmp/global_mark_cn.txt
     paopao-pref -inrule /tmp/global_mark_cn.txt -outrule /data/global_mark_cn.dat
     if [ "$TEST" = "debug" ]; then
+        mkdir -p /pub/debug/cn/
+        touch /pub/debug/cn/global_mark_cn_analyze.txt
         paopao-pref -an -inrule /data/global_mark_cn.dat -outrule /pub/debug/cn/global_mark_cn_analyze.txt
     fi
 }
@@ -109,7 +113,4 @@ pref_start_mark
 gen_global
 pref_start_cn
 gen_cn
-if [ "$TEST" = "debug" ]; then
-    global_debug
-fi
 hash_dat
