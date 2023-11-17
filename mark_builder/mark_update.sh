@@ -92,6 +92,7 @@ gen_cn() {
 }
 
 hash_dat() {
+    mkdir -p /pub
     paopao-pref -gbfile /data/global_mark_global.dat -grfile /data/global.rules -crfile /data/cn.rules -cnfile /data/global_mark_cn.dat -comp /data/global_mark.dat
     cd /data || exit
     if [ "$TEST" = "debug" ]; then
