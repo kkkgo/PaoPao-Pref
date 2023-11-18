@@ -38,15 +38,6 @@ curl -sLo /data/cn.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rule
         cp /domains_size /
         exit
     fi
-curl -sLo /data/applecn.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/apple-cn.txt &&
-    domains_size=$(wc -c <"/data/applecn.txt") &&
-    if [ "$domains_size" -gt 50 ]; then echo "domains_size pass."; else
-        echo "domains_size failed"
-        cp /domains_size /
-        exit
-    fi
-echo "" >>/data/cn.txt
-grep -Ev "^regexp:" /data/applecn.txt >>/data/cn.txt
 
 curl -sLo /data/proxy.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/proxy-list.txt &&
     domains_size=$(wc -c <"/data/proxy.txt") &&
