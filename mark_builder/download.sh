@@ -9,7 +9,7 @@ mkdir -p /data
 curl -sLo /data/Country-only-cn-private.mmdb https://raw.githubusercontent.com/kkkgo/Country-only-cn-private.mmdb/main/Country-only-cn-private.mmdb &&
     mmdb_hash=$(sha256sum /data/Country-only-cn-private.mmdb | grep -Eo "[a-zA-Z0-9]{64}" | head -1) &&
     mmdb_down_hash=$(curl -s https://raw.githubusercontent.com/kkkgo/Country-only-cn-private.mmdb/main/Country-only-cn-private.mmdb.sha256sum | grep -Eo "[a-zA-Z0-9]{64}" | head -1) &&
-    if [ "$mmdb_down_hash" != "$mmdb_hash" ]; then
+    if [ "$mmdb_down_hash" = "$mmdb_hash" ]; then echo "mmdb_size pass."; else
         cp /mmdb_down_hash_error .
         exit
     fi
@@ -45,8 +45,8 @@ curl -sLo /data/applecn.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray
         cp /domains_size /
         exit
     fi
-echo "" >>/data/cn.rules.txt
-grep -Ev "^regexp:" /data/applecn.txt >>/data/cn.rules.txt
+echo "" >>/data/cn.txt
+grep -Ev "^regexp:" /data/applecn.txt >>/data/cn.txt
 
 curl -sLo /data/proxy.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/proxy-list.txt &&
     domains_size=$(wc -c <"/data/proxy.txt") &&
@@ -57,7 +57,7 @@ curl -sLo /data/proxy.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-r
     fi
 grep -Ev "^regexp:" /data/proxy.txt | grep "." >/data/proxy.rules.txt
 
-paopao-pref -inrule /data/cn.rules.txt -outrule /data/cn.rules
+paopao-pref -inrule /data/cn.txt -outrule /data/cn.rules
 
 # global.rules: hook+fw+proxy
 touch /data/global.hook.raw
