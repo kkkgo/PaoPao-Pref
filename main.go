@@ -369,7 +369,7 @@ func appendToFile(content string) {
 
 func convertRule(rule string) string {
 	rule = strings.TrimSpace(rule)
-	if rule == "" || strings.HasPrefix(rule, "//") || strings.HasPrefix(rule, "!") || strings.HasPrefix(rule, "@") || strings.HasPrefix(rule, "[") {
+	if rule == "" || strings.HasPrefix(rule, "//") || strings.HasPrefix(rule, "!") || strings.HasPrefix(rule, "@") || strings.HasPrefix(rule, "[") || strings.HasPrefix(rule, "full:") {
 		return ""
 	}
 
