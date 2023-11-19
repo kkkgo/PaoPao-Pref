@@ -1,5 +1,5 @@
 FROM sliamb/paopaodns AS download
-RUN apk update && apk add curl
+RUN apk add --no-cache curl
 COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 WORKDIR /data
 COPY download.sh /data/
@@ -7,7 +7,7 @@ COPY * /predata/
 RUN sh /data/download.sh
 
 FROM alpine:edge
-RUN apk add --no-cache curl xz
+RUN apk add --no-cache xz
 COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 COPY --from=sliamb/prebuild-paopaodns /src/mosdns /usr/bin/
 COPY --from=download /data/Country-only-cn-private.mmdb /data/

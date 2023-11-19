@@ -67,33 +67,34 @@ pref_start_cn() {
 }
 
 gen_global() {
-    echo "" >>/data/global.rules
-    cat /data/domains_ok.txt >>/data/global.rules
-    echo "" >>/data/global.rules
-    paopao-pref -inrule /data/global.rules -outrule /data/global_mark_global.dat
+        cat /data/global.rules >/tmp/global.data.txt
+    echo "" >>/data/global.data.txt
+    cat /data/domains_ok.txt >>/data/global.data.txt
+    echo "" >>/data/global.data.txt
+    paopao-pref -inrule /data/global.data.txt -outrule /data/global.data
     if [ "$TEST" = "debug" ]; then
         mkdir -p /pub/debug/global/
-        touch /pub/debug/global/global_mark_global_analyze.txt
-        paopao-pref -an -inrule /data/global_mark_global.dat -outrule /pub/debug/global/global_mark_global_analyze.txt
+        touch /pub/debug/global/global.data.txt
+        paopao-pref -an -inrule /data/global.data -outrule /pub/debug/global/global.data.txt
     fi
 }
 gen_cn() {
-    cat /data/global.cnfilter.rules >/tmp/global_mark_cn.txt
-    echo "" >>/tmp/global_mark_cn.txt
-    cat /data/cn.rules >>/tmp/global_mark_cn.txt
-    echo "" >>/tmp/global_mark_cn.txt
-    cat /data/domains_ok.txt >>/tmp/global_mark_cn.txt
-    echo "" >>/tmp/global_mark_cn.txt
-    paopao-pref -inrule /tmp/global_mark_cn.txt -outrule /data/global_mark_cn.dat
+    cat /data/global.cnfilter.rules >/tmp/cn.data.txt
+    echo "" >>/tmp/cn.data.txt
+    cat /data/cn.rules >>/tmp/cn.data.txt
+    echo "" >>/tmp/cn.data.txt
+    cat /data/domains_ok.txt >>/tmp/cn.data.txt
+    echo "" >>/tmp/cn.data.txt
+    paopao-pref -inrule /tmp/cn.data.txt -outrule /data/cn.data
     if [ "$TEST" = "debug" ]; then
         mkdir -p /pub/debug/cn/
-        touch /pub/debug/cn/global_mark_cn_analyze.txt
-        paopao-pref -an -inrule /data/global_mark_cn.dat -outrule /pub/debug/cn/global_mark_cn_analyze.txt
+        touch /pub/debug/cn/cn.data.txt
+        paopao-pref -an -inrule /data/cn.data -outrule /pub/debug/cn/cn.data.txt
     fi
 }
 
 hash_dat() {
-    paopao-pref -gbfile /data/global_mark_global.dat -grfile /data/global.rules -crfile /data/cn.rules -cnfile /data/global_mark_cn.dat -comp /data/global_mark.dat
+    paopao-pref -gbfile /data/global.data -grfile /data/global.rules -crfile /data/cn.rules -cnfile /data/cn.data -comp /data/global_mark.dat
     cd /data || exit
     if [ "$TEST" = "debug" ]; then
         cp global_mark.dat /pub/global_mark_raw.dat
