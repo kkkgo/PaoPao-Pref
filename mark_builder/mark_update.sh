@@ -67,11 +67,12 @@ pref_start_cn() {
 }
 
 gen_global() {
-        cat /data/global.rules >/tmp/global.data.txt
-    echo "" >>/data/global.data.txt
-    cat /data/domains_ok.txt >>/data/global.data.txt
-    echo "" >>/data/global.data.txt
-    paopao-pref -inrule /data/global.data.txt -outrule /data/global.data
+    gen_global_txt="/tmp/global.data.txt"
+    cat /data/global.rules >$gen_global_txt
+    echo "" >>$gen_global_txt
+    cat /data/domains_ok.txt >>$gen_global_txt
+    echo "" >>$gen_global_txt
+    paopao-pref -inrule $gen_global_txt -outrule /data/global.data
     if [ "$TEST" = "debug" ]; then
         mkdir -p /pub/debug/global/
         touch /pub/debug/global/global.data.txt
@@ -79,13 +80,14 @@ gen_global() {
     fi
 }
 gen_cn() {
-    cat /data/global.cnfilter.rules >/tmp/cn.data.txt
-    echo "" >>/tmp/cn.data.txt
-    cat /data/cn.rules >>/tmp/cn.data.txt
-    echo "" >>/tmp/cn.data.txt
-    cat /data/domains_ok.txt >>/tmp/cn.data.txt
-    echo "" >>/tmp/cn.data.txt
-    paopao-pref -inrule /tmp/cn.data.txt -outrule /data/cn.data
+    gen_cn_txt="/tmp/cn.data.txt"
+    cat /data/global.cnfilter.rules >$gen_cn_txt
+    echo "" >>$gen_cn_txt
+    cat /data/cn.rules >>$gen_cn_txt
+    echo "" >>$gen_cn_txt
+    cat /data/domains_ok.txt >>$gen_cn_txt
+    echo "" >>$gen_cn_txt
+    paopao-pref -inrule $gen_cn_txt -outrule /data/cn.data
     if [ "$TEST" = "debug" ]; then
         mkdir -p /pub/debug/cn/
         touch /pub/debug/cn/cn.data.txt
