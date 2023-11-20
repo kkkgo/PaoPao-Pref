@@ -23,9 +23,11 @@ curl -sLo /data/inrule_base64.txt https://raw.githubusercontent.com/gfwlist/gfwl
     fi &&
     base64 -d /data/inrule_base64.txt >/data/inrule.txt
 
-curl -sLo /data/topdomains.data https://github.com/kkkgo/PaoPao-Pref/raw/main/domains.txt &&
+curl -sLo /data/top-1m.csv.zip http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip &&
+    unzip top-1m.csv.zip &&
+    cut -d"," -f2 top-1m.csv >/data/topdomains.data &&
     domains_size=$(wc -c <"/data/topdomains.data") &&
-    if [ "$domains_size" -gt 10000000 ]; then echo "domains_size pass."; else
+    if [ "$domains_size" -gt 20000000 ]; then echo "domains_size pass."; else
         echo "domains_size failed"
         cp /domains_size /
         exit

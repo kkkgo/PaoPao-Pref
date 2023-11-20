@@ -54,7 +54,7 @@ pref_start_mark() {
         rm domains_ok.txt
         touch domains_ok.txt
     fi
-    paopao-pref -file /data/topdomains.rules -server 127.0.0.1 -port 5302 -v >/tmp/pref.log
+    paopao-pref -file /data/topdomains.rules -server 127.0.0.1 -port 5302
 }
 
 pref_start_cn() {
@@ -63,7 +63,7 @@ pref_start_cn() {
         rm domains_ok.txt
         touch domains_ok.txt
     fi
-    paopao-pref -file /data/topdomains.txt -server 127.0.0.1 -port 5303 -v >/tmp/pref.log
+    paopao-pref -file /data/topdomains.txt -server 127.0.0.1 -port 5303
 }
 
 gen_global() {
