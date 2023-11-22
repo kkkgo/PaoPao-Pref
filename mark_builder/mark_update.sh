@@ -96,7 +96,8 @@ gen_cn() {
 }
 
 hash_dat() {
-    paopao-pref -gbfile /data/global.data -grfile /data/global.rules -crfile /data/cn.rules -cnfile /data/cn.data -comp /data/global_mark.dat
+    paopao-pref -gbfile /data/global.data -grfile /data/global.rules -crfile /data/cn.rules -cnfile /data/cn.data -comp /data/global_mark.dat.tmp
+    cat /data/force_cn.rules /data/global_mark.dat.tmp | sort -u >/data/global_mark.dat
     cd /data || exit
     if [ "$TEST" = "debug" ]; then
         cp global_mark.dat /pub/global_mark_raw.dat
