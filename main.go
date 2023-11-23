@@ -27,6 +27,7 @@ var (
 	cnfile   string
 	comp     string
 	inrule   string
+	filter   string
 	outrule  string
 	limit    int
 	line     int
@@ -56,6 +57,7 @@ func init() {
 	flag.StringVar(&cnfile, "cnfile", "", "comp")
 	flag.StringVar(&comp, "comp", "", "comp gb cn result file.")
 	flag.StringVar(&inrule, "inrule", "", "input proxy rule")
+	flag.StringVar(&filter, "filter", "", "input filter rule")
 	flag.StringVar(&outrule, "outrule", "", "output proxy rule.")
 	flag.IntVar(&limit, "limit", 10, "concurrency limit")
 	flag.IntVar(&line, "line", 0, "start line")
@@ -175,6 +177,13 @@ func main() {
 	}
 	if os.Getenv("DNS_LOG") == "yes" {
 		verbose = true
+	}
+	if filter != "" {
+		err := filterRules(inrule, filter, outrule)
+		if err != nil {
+			os.Exit(1)
+		}
+		os.Exit(0)
 	}
 	if inrule != "" {
 		err := convertRules(inrule, outrule)
@@ -411,6 +420,38 @@ func addDotIfMissing(str string) string {
 		str = "." + str
 	}
 	return str
+}
+func filterRules(inputFile, filterFile, outputFile string) error {
+
+	iRules, err := readKeywords(inputFile)
+	if err != nil {
+		return err
+	}
+	fRules, err := readKeywords(filterFile)
+	if err != nil {
+		return err
+	}
+	output, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer output.Close()
+	fmt.Fprintln(output)
+
+	for _, iKeyword := range iRules {
+		global := true
+		for _, fKeyword := range fRules {
+			if strings.HasSuffix(iKeyword, fKeyword) {
+				global = false
+				break
+			}
+		}
+		if global {
+			fmt.Fprintln(output, "domain:"+iKeyword)
+		}
+	}
+	fmt.Println("inrule filter finish.")
+	return nil
 }
 func convertRules(inputFile, outputFile string) error {
 	input, err := os.Open(inputFile)
