@@ -59,17 +59,15 @@ cat /data/inrule.txt >>/data/global.hook.raw
 echo "" >>/data/global.hook.raw
 cat /data/proxy.rules.txt >>/data/global.hook.raw
 echo "" >>/data/global.hook.raw
-paopao-pref -inrule /data/global.hook.raw -outrule /data/global.rules
+paopao-pref -inrule /data/global.hook.raw -outrule /data/global.rules.nofilter
 
 touch /data/cn.hook.raw
 echo "" >>/data/cn.hook.raw
 cat /data/cn.rules >>/data/cn.hook.raw
 echo "" >>/data/cn.hook.raw
 paopao-pref -inrule /data/cn.hook.raw -outrule /data/global.cnfilter.rules
-touch /data/fcn.hook.rules
-paopao-pref -inrule /data/fcn.hook.rules -outrule /data/force_cn.rules
-sed -i "s/domain:/##@@domain:/g" /data/force_cn.rules
-echo "" >>/data/force_cn.rules
+
+paopao-pref -inrule /data/global.rules.nofilter -filter /data/global.cnfilter.rules -outrule /data/global.rules
 
 touch /data/skip.raw
 echo "" >>/data/skip.raw
