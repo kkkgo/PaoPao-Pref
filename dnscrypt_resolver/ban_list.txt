@@ -7,8 +7,11 @@ ams-ads-doh-nl
 ams-dnscrypt-nl
 ams-doh-nl
 brahma-world
+dct-at
 dct-at1
+dct-nl
 dct-nl1
+dct-ru
 dct-ru1
 doh-ibksturm
 doh.tiar.app
@@ -23,3 +26,4 @@ sby-limotelu
 sth-ads-doh-se
 sth-dnscrypt-se
 sth-doh-se
+wevpn-singapore
