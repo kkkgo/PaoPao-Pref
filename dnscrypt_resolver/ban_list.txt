@@ -13,6 +13,7 @@ dct-nl
 dct-nl1
 dct-ru
 dct-ru1
+dnslow.me
 doh-ibksturm
 doh.tiar.app
 doh.tiar.app-doh
