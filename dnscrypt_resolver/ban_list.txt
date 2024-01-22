@@ -16,3 +16,5 @@ jp.tiar.app-doh
 jp.tiarap.org
 sby-doh-limotelu
 sby-limotelu
+tirapan-doh-ipv4
+wevpn-singapore
