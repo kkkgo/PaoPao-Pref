@@ -3,6 +3,7 @@ adfilter-per
 adfilter-syd
 ahadns-doh-la
 ahadns-doh-nl
+bebasdns-family
 brahma-world
 dct-at
 dct-nl
@@ -11,10 +12,14 @@ doh-ibksturm
 doh.tiar.app
 doh.tiar.app-doh
 doh.tiarap.org
+ibksturm
 jp.tiar.app
 jp.tiar.app-doh
 jp.tiarap.org
 sby-doh-limotelu
 sby-limotelu
+sth-ads-doh-se
+sth-dnscrypt-se
+sth-doh-se
 tirapan-doh-ipv4
 wevpn-singapore
