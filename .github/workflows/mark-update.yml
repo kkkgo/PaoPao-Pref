@@ -14,7 +14,7 @@ jobs:
       - name: login docker
         run: echo ${{ secrets.TDOCKERHUB_TOKEN }} | docker login ${{ secrets.TDOCKERHUB_LOGIN }} --username ${{ secrets.TDOCKERHUB_USERNAME }} --password-stdin
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: pull
         run: docker pull ${{ secrets.TDOCKERHUB_TAG }} >/dev/null
       - name: run
@@ -55,8 +55,8 @@ jobs:
     needs: update_mark
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: ${{ secrets.DATA }}
           token: ${{ secrets.GH_TOKEN }}

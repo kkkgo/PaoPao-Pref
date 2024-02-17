@@ -50,8 +50,8 @@ jobs:
     needs: build_docker
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: ${{ secrets.DATA }}
           token: ${{ secrets.GH_TOKEN }}
