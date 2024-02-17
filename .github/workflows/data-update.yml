@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Update data
       run: sh update_data.sh
     - uses: EndBug/add-and-commit@v9
@@ -67,8 +67,8 @@ jobs:
     needs: build_docker
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: ${{ secrets.DATA }}
           token: ${{ secrets.GH_TOKEN }}
