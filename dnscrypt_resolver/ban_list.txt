@@ -3,11 +3,15 @@ adfilter-per
 adfilter-syd
 ahadns-doh-la
 ahadns-doh-nl
+ams-ads-doh-nl
+ams-dnscrypt-nl
+ams-doh-nl
 bebasdns-family
 brahma-world
 dct-at
 dct-nl
 dct-ru
+dns.b33.network-dnscrypt
 doh-ibksturm
 doh.tiar.app
 doh.tiar.app-doh
