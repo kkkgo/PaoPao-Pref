@@ -31,11 +31,11 @@
 # 每次操作前先拉取最新镜像
 docker pull sliamb/paopao-pref
 # 指定DNS服务器为192.168.1.8
-docker run --rm -it sliamb/paopao-pref -server 192.168.1.8
+docker run --rm --net=host -it sliamb/paopao-pref -server 192.168.1.8
 # 从第1000行开始
-docker run --rm -it sliamb/paopao-pref -line 1000 -server 192.168.1.8
+docker run --rm --net=host -it sliamb/paopao-pref -line 1000 -server 192.168.1.8
 # 指定并发数为25, DNS查询间隔为0ms, 查询超时1s, 前1%的热门域名
-docker run --rm -it sliamb/paopao-pref -server 10.10.10.8 -pc 1 -limit 25 -sleep 0ms -timeout 1s
+docker run --rm --net=host -it sliamb/paopao-pref -server 10.10.10.8 -pc 1 -limit 25 -sleep 0ms -timeout 1s
 ```
 你也可以使用环境变量：   
 环境变量名|对应选项
