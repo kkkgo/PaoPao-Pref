@@ -12,6 +12,7 @@ dct-at
 dct-nl
 dct-ru
 dns.b33.network-dnscrypt
+dnslow.me
 doh-ibksturm
 doh.tiar.app
 doh.tiar.app-doh
