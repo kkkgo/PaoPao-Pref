@@ -40,7 +40,10 @@ curl -sLo /data/cn.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rule
         cp /domains_size /
         exit
     fi
-
+if [ -f /predata/cn_mark.rules ]; then
+    echo "" >>/data/cn.txt
+    cat /predata/cn_mark.rules >>/data/cn.txt
+fi
 curl -sLo /data/proxy.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/proxy-list.txt &&
     domains_size=$(wc -c <"/data/proxy.txt") &&
     if [ "$domains_size" -gt 10000 ]; then echo "domains_size pass."; else
