@@ -48,6 +48,7 @@ mosdns_gen_mark_start() {
     ps
 }
 
+# Gen global_mark
 pref_start_mark() {
     echo "Start pref mark..."
     if [ -f domains_ok.txt ]; then
@@ -57,15 +58,7 @@ pref_start_mark() {
     paopao-pref -file /data/topdomains.rules -server 127.0.0.1 -port 5302
 }
 
-pref_start_cn() {
-    echo "Start pref cn..."
-    if [ -f domains_ok.txt ]; then
-        rm domains_ok.txt
-        touch domains_ok.txt
-    fi
-    paopao-pref -file /data/topdomains.txt -server 127.0.0.1 -port 5303
-}
-
+# Gen /data/global.data: /data/global.rules + pref_start_mark
 gen_global() {
     gen_global_txt="/tmp/global.data.txt"
     cat /data/global.rules >$gen_global_txt
@@ -79,6 +72,18 @@ gen_global() {
         paopao-pref -an -inrule /data/global.data -outrule /pub/debug/global/global.data.txt
     fi
 }
+
+# Gen global_mark_cn
+pref_start_cn() {
+    echo "Start pref cn..."
+    if [ -f domains_ok.txt ]; then
+        rm domains_ok.txt
+        touch domains_ok.txt
+    fi
+    paopao-pref -file /data/topdomains.txt -server 127.0.0.1 -port 5303
+}
+
+# Gen /data/cn.data: /data/cn.rules(direct + cn_mark) + global.cnfilter.rules(cn.hook.rules + cn.rules) + topdomains(cn)
 gen_cn() {
     gen_cn_txt="/tmp/cn.data.txt"
     cat /data/global.cnfilter.rules >$gen_cn_txt

@@ -15,7 +15,7 @@ plugins:
       exps:
         - "google.com"
 #gen_mark      files:
-#gen_mark        - "/data/mark.skip.rules"
+#gen_mark        - "/data/alreadymark.skip.rules"
 
   - tag: test_cn
     type: forward
