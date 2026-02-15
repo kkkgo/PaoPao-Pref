@@ -1,5 +1,5 @@
 FROM sliamb/paopaodns AS download
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl git
 COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
 WORKDIR /data
 COPY download.sh /data/
