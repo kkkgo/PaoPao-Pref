@@ -19,8 +19,8 @@ curl -sLo /data/top-1m.csv.zip http://s3-us-west-1.amazonaws.com/umbrella-static
     cut -d"," -f2 top-1m.csv >/data/topdomains.data &&
     domains_size=$(wc -c <"/data/topdomains.data") &&
     if [ "$domains_size" -gt 20000000 ]; then echo "domains_size pass."; else
-        echo "domains_size failed"
-        cp /domains_size /
+        echo "domains_size failed: topdomains.data"
+        cp /domains_size /domains_size_failed_topdomains.data
         exit
     fi
 
@@ -30,8 +30,8 @@ git clone --depth 1 -b master https://github.com/gfwlist/gfwlist /data/gfwlist_r
     rm -rf /data/gfwlist_repo &&
     domains_size=$(wc -l <"/data/proxy.rules.txt") &&
     if [ "$domains_size" -gt 4000 ]; then echo "domains_size pass."; else
-        echo "domains_size failed"
-        cp /domains_size /
+        echo "domains_size failed: proxy.rules.txt"
+        cp /domains_size /domains_size_failed_proxy.rules.txt
         exit
     fi
 echo "" >>/data/proxy.rules.txt
@@ -46,8 +46,8 @@ git clone --depth 1 -b release https://github.com/Loyalsoldier/v2ray-rules-dat /
     rm -rf /data/v2ray_repo &&
     domains_size=$(wc -c <"/data/cn.txt") &&
     if [ "$domains_size" -gt 50000 ]; then echo "domains_size pass."; else
-        echo "domains_size failed"
-        cp /domains_size /
+        echo "domains_size failed: cn.txt"
+        cp /domains_size /domains_size_failed_cn.txt
         exit
     fi
 if [ -f /predata/cn_mark.rules ]; then
