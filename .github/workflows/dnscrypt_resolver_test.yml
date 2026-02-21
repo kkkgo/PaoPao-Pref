@@ -18,7 +18,7 @@ jobs:
         stack: dual
 #        mode: client
     - name: check IPv6
-      run: curl https://ip6.03k.org -d""
+      run: curl https://ip6.03k.org -d" "
     - name: check dnscrypt_resolver
       run: sh dnscrypt_resolver/test.sh
     - uses: EndBug/add-and-commit@v9
