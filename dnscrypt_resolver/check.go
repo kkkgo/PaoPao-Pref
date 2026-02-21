@@ -61,13 +61,27 @@ func main() {
 	fmt.Println("Ready to test...")
 
 	var badNew []string
+	var localBadNames []string
 
 	for _, res := range resolvers {
 		status := testResolver(res)
+		if status == "CONNECT BAD." {
+			isKnownBadPrefix := false
+			for _, badName := range localBadNames {
+				if strings.HasPrefix(res.Name, badName+"-") {
+					isKnownBadPrefix = true
+					break
+				}
+			}
+			if isKnownBadPrefix {
+				status = "LOCAL BAD."
+			}
+		}
 
 		fmt.Printf("%s: %s\n", res.Name, status)
 
 		if status == "LOCAL BAD." {
+			localBadNames = append(localBadNames, res.Name)
 			badNew = append(badNew, res.Name)
 			banMap[res.Name] = true
 		}
@@ -103,7 +117,7 @@ func fetchResolvers() []Resolver {
 	var resolvers []Resolver
 	scanner := bufio.NewScanner(resp.Body)
 	var currentName string
-	namesFound := make(map[string]bool) // the bash script used sort -u
+	namesFound := make(map[string]bool)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
