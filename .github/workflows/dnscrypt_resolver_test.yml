@@ -13,7 +13,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Setup WARP
-      uses: fscarmen/warp-on-actions@v1.0
+      uses: fscarmen/warp-on-actions@v1.4
     - name: check dnscrypt_resolver
       run: sh dnscrypt_resolver/test.sh
     - uses: EndBug/add-and-commit@v9
