@@ -4,7 +4,7 @@ COPY check.go .
 RUN go build -ldflags="-s -w" -o check check.go
 
 FROM alpine:edge
-RUN apk add --no-cache dnscrypt-proxy bind-tools ca-certificates tzdata
+RUN apk add --no-cache dnscrypt-proxy ca-certificates tzdata
 WORKDIR /data
 COPY --from=builder /app/check /usr/bin/check
 CMD ["/usr/bin/check"]

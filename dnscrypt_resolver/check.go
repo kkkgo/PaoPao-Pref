@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -67,11 +68,11 @@ func main() {
 
 	numWorkers := 15
 	jobs := make(chan Resolver, len(resolvers))
-	results := make(chan struct {
+	type result struct {
 		Name   string
 		Status string
-		Order  int
-	}, len(resolvers))
+	}
+	results := make(chan result)
 
 	var wg sync.WaitGroup
 
@@ -116,36 +117,28 @@ func main() {
 					mu.Unlock()
 				}
 
-				results <- struct {
-					Name   string
-					Status string
-					Order  int
-				}{res.Name, status, 0}
+				results <- result{res.Name, status}
 			}
 		}(i)
 	}
-
-	for _, res := range resolvers {
-		jobs <- res
-	}
-	close(jobs)
 
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
 
-	resultMap := make(map[string]string)
-	for r := range results {
-		resultMap[r.Name] = r.Status
-	}
+	go func() {
+		for _, res := range resolvers {
+			jobs <- res
+		}
+		close(jobs)
+	}()
 
-	for _, res := range resolvers {
-		status := resultMap[res.Name]
-		fmt.Printf("%s: %s\n", res.Name, status)
-		if status == "LOCAL BAD." {
-			badNew = append(badNew, res.Name)
-			banMap[res.Name] = true
+	for r := range results {
+		fmt.Printf("%s: %s\n", r.Name, r.Status)
+		if r.Status == "LOCAL BAD." {
+			badNew = append(badNew, r.Name)
+			banMap[r.Name] = true
 		}
 	}
 
@@ -213,10 +206,36 @@ func fetchResolvers() []Resolver {
 	return resolvers
 }
 
-func dig(host string, qtype string, port int) string {
-	args := []string{"@127.0.0.1", "-p", fmt.Sprintf("%d", port), "+time=3", "+tries=1", host, qtype}
-	out, _ := exec.Command("dig", args...).CombinedOutput()
-	return string(out)
+func dnsQuery(host string, qtype string, port int) []string {
+	r := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{Timeout: 3 * time.Second}
+			return d.DialContext(ctx, "udp", fmt.Sprintf("127.0.0.1:%d", port))
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	switch strings.ToUpper(qtype) {
+	case "MX":
+		mxs, err := r.LookupMX(ctx, host)
+		if err != nil {
+			return nil
+		}
+		var results []string
+		for _, mx := range mxs {
+			results = append(results, mx.Host)
+		}
+		return results
+	case "A":
+		addrs, err := r.LookupHost(ctx, host)
+		if err != nil {
+			return nil
+		}
+		return addrs
+	}
+	return nil
 }
 
 func testResolver(res Resolver, port int) string {
@@ -248,32 +267,49 @@ server_names = ['test']
 
 	waitForListen(fmt.Sprintf("127.0.0.1:%d", port), time.Second*5)
 
-	var testRes string
+	// Check gmail.com MX - retry up to 5 times
+	var gmailMX []string
 	for i := 0; i < 5; i++ {
-		testRes = dig("gmail.com", "mx", port)
-		if strings.Contains(testRes, "smtp") || strings.Contains(strings.ToLower(testRes), "google.com") {
+		gmailMX = dnsQuery("gmail.com", "mx", port)
+		if len(gmailMX) > 0 {
 			break
 		}
 		time.Sleep(1 * time.Second)
 	}
 
-	if strings.Contains(testRes, "smtp") || strings.Contains(strings.ToLower(testRes), "google.com") {
-		if strings.Contains(dig("local.03k.org", "a", port), "10.9.8.7") {
-			return "OK."
-		} else {
-			if strings.Contains(dig("local.03k.org", "a", port), "10.9.8.7") {
-				return "OK."
-			} else {
-				if strings.Contains(dig("03k.org", "mx", port), "qq.com") {
-					return "LOCAL BAD."
-				} else {
-					return "CONNECT BAD."
-				}
-			}
+	gmailOk := false
+	for _, mx := range gmailMX {
+		mx = strings.ToLower(mx)
+		if strings.Contains(mx, "smtp") || strings.Contains(mx, "google.com") {
+			gmailOk = true
+			break
 		}
-	} else {
+	}
+
+	if !gmailOk {
 		return "CONNECT BAD."
 	}
+
+	// Check local record
+	for _, attempt := range []int{1, 2} {
+		_ = attempt
+		localIPs := dnsQuery("local.03k.org", "a", port)
+		for _, ip := range localIPs {
+			if ip == "10.9.8.7" {
+				return "OK."
+			}
+		}
+	}
+
+	// Check 03k.org MX to distinguish LOCAL BAD vs CONNECT BAD
+	mxRecords := dnsQuery("03k.org", "mx", port)
+	for _, mx := range mxRecords {
+		if strings.Contains(strings.ToLower(mx), "qq.com") {
+			return "LOCAL BAD."
+		}
+	}
+
+	return "CONNECT BAD."
 }
 
 func waitForListen(addr string, timeout time.Duration) bool {
