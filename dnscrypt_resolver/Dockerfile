@@ -1,6 +1,10 @@
+FROM golang:alpine AS builder
+WORKDIR /app
+COPY check.go .
+RUN go build -ldflags="-s -w" -o check check.go
+
 FROM alpine:edge
-RUN apk add dnscrypt-proxy git bind-tools
+RUN apk add --no-cache dnscrypt-proxy bind-tools ca-certificates tzdata
 WORKDIR /data
-COPY check.sh /usr/bin/
-RUN chmod +x /usr/bin/check.sh
-CMD check.sh
+COPY --from=builder /app/check /usr/bin/check
+CMD ["/usr/bin/check"]
