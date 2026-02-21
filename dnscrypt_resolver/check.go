@@ -106,32 +106,42 @@ func main() {
 }
 
 func fetchResolvers() []Resolver {
-	url := "https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md"
-	resp, err := http.Get(url)
-	if err != nil {
-		fmt.Println("Failed to download resolvers:", err)
-		return nil
+	sources := []struct {
+		url    string
+		prefix string
+	}{
+		{"https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md", ""},
+		{"https://www.dnscry.pt/resolvers.md", ""},
 	}
-	defer resp.Body.Close()
 
 	var resolvers []Resolver
-	scanner := bufio.NewScanner(resp.Body)
-	var currentName string
 	namesFound := make(map[string]bool)
 
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "## ") {
-			parts := strings.SplitN(line, " ", 2)
-			if len(parts) == 2 {
-				currentName = strings.TrimSpace(parts[1])
-			}
-		} else if strings.HasPrefix(line, "sdns://") && currentName != "" {
-			if !namesFound[currentName] {
-				resolvers = append(resolvers, Resolver{Name: currentName, Stamp: line})
-				namesFound[currentName] = true
+	for _, src := range sources {
+		resp, err := http.Get(src.url)
+		if err != nil {
+			fmt.Printf("Failed to download from %s: %v\n", src.url, err)
+			continue
+		}
+
+		scanner := bufio.NewScanner(resp.Body)
+		var currentName string
+
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if strings.HasPrefix(line, "## ") {
+				parts := strings.SplitN(line, " ", 2)
+				if len(parts) == 2 {
+					currentName = src.prefix + strings.TrimSpace(parts[1])
+				}
+			} else if strings.HasPrefix(line, "sdns://") && currentName != "" {
+				if !namesFound[currentName] {
+					resolvers = append(resolvers, Resolver{Name: currentName, Stamp: line})
+					namesFound[currentName] = true
+				}
 			}
 		}
+		resp.Body.Close()
 	}
 
 	sort.Slice(resolvers, func(i, j int) bool {
