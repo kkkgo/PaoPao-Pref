@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -62,26 +63,87 @@ func main() {
 
 	var badNew []string
 	var localBadNames []string
+	var mu sync.Mutex
+
+	numWorkers := 15
+	jobs := make(chan Resolver, len(resolvers))
+	results := make(chan struct {
+		Name   string
+		Status string
+		Order  int
+	}, len(resolvers))
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			basePort := 5302 + workerID
+
+			for res := range jobs {
+				mu.Lock()
+				isKnownBadPrefix := false
+				for _, badName := range localBadNames {
+					if strings.HasPrefix(res.Name, badName+"-") {
+						isKnownBadPrefix = true
+						break
+					}
+				}
+				mu.Unlock()
+
+				var status string
+				if isKnownBadPrefix {
+					status = "LOCAL BAD."
+				} else {
+					status = testResolver(res, basePort)
+
+					if status == "CONNECT BAD." {
+						mu.Lock()
+						for _, badName := range localBadNames {
+							if strings.HasPrefix(res.Name, badName+"-") {
+								status = "LOCAL BAD."
+								break
+							}
+						}
+						mu.Unlock()
+					}
+				}
+
+				if status == "LOCAL BAD." {
+					mu.Lock()
+					localBadNames = append(localBadNames, res.Name)
+					mu.Unlock()
+				}
+
+				results <- struct {
+					Name   string
+					Status string
+					Order  int
+				}{res.Name, status, 0}
+			}
+		}(i)
+	}
 
 	for _, res := range resolvers {
-		status := testResolver(res)
-		if status == "CONNECT BAD." {
-			isKnownBadPrefix := false
-			for _, badName := range localBadNames {
-				if strings.HasPrefix(res.Name, badName+"-") {
-					isKnownBadPrefix = true
-					break
-				}
-			}
-			if isKnownBadPrefix {
-				status = "LOCAL BAD."
-			}
-		}
+		jobs <- res
+	}
+	close(jobs)
 
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	resultMap := make(map[string]string)
+	for r := range results {
+		resultMap[r.Name] = r.Status
+	}
+
+	for _, res := range resolvers {
+		status := resultMap[res.Name]
 		fmt.Printf("%s: %s\n", res.Name, status)
-
 		if status == "LOCAL BAD." {
-			localBadNames = append(localBadNames, res.Name)
 			badNew = append(badNew, res.Name)
 			banMap[res.Name] = true
 		}
@@ -151,20 +213,20 @@ func fetchResolvers() []Resolver {
 	return resolvers
 }
 
-func dig(host string, qtype string) string {
-	args := []string{"@127.0.0.1", "-p", "5302", "+time=3", "+tries=1", host, qtype}
+func dig(host string, qtype string, port int) string {
+	args := []string{"@127.0.0.1", "-p", fmt.Sprintf("%d", port), "+time=3", "+tries=1", host, qtype}
 	out, _ := exec.Command("dig", args...).CombinedOutput()
 	return string(out)
 }
 
-func testResolver(res Resolver) string {
-	configPath := "/tmp/test_now.toml"
-	configContent := fmt.Sprintf(`listen_addresses = ['127.0.0.1:5302']
+func testResolver(res Resolver, port int) string {
+	configPath := fmt.Sprintf("/tmp/test_now_%d.toml", port)
+	configContent := fmt.Sprintf(`listen_addresses = ['127.0.0.1:%d']
 server_names = ['test']
 [static]
   [static.'test']
   stamp = '%s'
-`, res.Stamp)
+`, port, res.Stamp)
 
 	err := ioutil.WriteFile(configPath, []byte(configContent), 0644)
 	if err != nil {
@@ -184,11 +246,11 @@ server_names = ['test']
 		cmd.Wait()
 	}()
 
-	waitForListen("127.0.0.1:5302", time.Second*5)
+	waitForListen(fmt.Sprintf("127.0.0.1:%d", port), time.Second*5)
 
 	var testRes string
 	for i := 0; i < 5; i++ {
-		testRes = dig("gmail.com", "mx")
+		testRes = dig("gmail.com", "mx", port)
 		if strings.Contains(testRes, "smtp") || strings.Contains(strings.ToLower(testRes), "google.com") {
 			break
 		}
@@ -196,13 +258,13 @@ server_names = ['test']
 	}
 
 	if strings.Contains(testRes, "smtp") || strings.Contains(strings.ToLower(testRes), "google.com") {
-		if strings.Contains(dig("local.03k.org", "a"), "10.9.8.7") {
+		if strings.Contains(dig("local.03k.org", "a", port), "10.9.8.7") {
 			return "OK."
 		} else {
-			if strings.Contains(dig("local.03k.org", "a"), "10.9.8.7") {
+			if strings.Contains(dig("local.03k.org", "a", port), "10.9.8.7") {
 				return "OK."
 			} else {
-				if strings.Contains(dig("03k.org", "mx"), "qq.com") {
+				if strings.Contains(dig("03k.org", "mx", port), "qq.com") {
 					return "LOCAL BAD."
 				} else {
 					return "CONNECT BAD."
