@@ -16,7 +16,7 @@ jobs:
       uses: fscarmen/warp-on-actions@v1.4
       with:
         stack: dual
-        mode: client
+#        mode: client
     - name: check IPv6
       run: curl https://ip6.03k.org -d""
     - name: check dnscrypt_resolver
