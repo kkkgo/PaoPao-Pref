@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -158,6 +160,21 @@ func main() {
 		fmt.Println("Failed to write to ban list:", err)
 	}
 	fmt.Println("Testing completed.")
+
+	if data, err := os.ReadFile(banListFile); err == nil {
+		sum := sha256.Sum256(data)
+		sumLine := hex.EncodeToString(sum[:]) + "  " + filepath.Base(banListFile) + "\n"
+		sumFile := banListFile + ".sha256sum"
+		if err := os.WriteFile(sumFile, []byte(sumLine), 0644); err != nil {
+			fmt.Println("Failed to write sha256sum file:", err)
+		} else {
+			fmt.Printf("SHA256: %s\nChecksum written to %s\n", strings.TrimSpace(sumLine), sumFile)
+		}
+	} else {
+		fmt.Println("Failed to read ban list for hashing:", err)
+	}
+
+	_ = badNew
 }
 
 func fetchResolvers() []Resolver {
@@ -267,7 +284,6 @@ server_names = ['test']
 
 	waitForListen(fmt.Sprintf("127.0.0.1:%d", port), time.Second*5)
 
-	// Check gmail.com MX - retry up to 5 times
 	var gmailMX []string
 	for i := 0; i < 5; i++ {
 		gmailMX = dnsQuery("gmail.com", "mx", port)
@@ -290,7 +306,6 @@ server_names = ['test']
 		return "CONNECT BAD."
 	}
 
-	// Check local record
 	for _, attempt := range []int{1, 2} {
 		_ = attempt
 		localIPs := dnsQuery("local.03k.org", "a", port)
@@ -301,7 +316,6 @@ server_names = ['test']
 		}
 	}
 
-	// Check 03k.org MX to distinguish LOCAL BAD vs CONNECT BAD
 	mxRecords := dnsQuery("03k.org", "mx", port)
 	for _, mx := range mxRecords {
 		if strings.Contains(strings.ToLower(mx), "qq.com") {
