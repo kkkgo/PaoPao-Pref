@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -261,27 +260,6 @@ func main() {
 			f.WriteString(b + "\n")
 		}
 		f.Close()
-
-		cmd := exec.Command("sha256sum", "ban_list.txt")
-		cmd.Dir = filepath.Dir(banListFile)
-		out, err := cmd.Output()
-		if err == nil {
-			_ = ioutil.WriteFile(banListFile+".sha256sum", out, 0644)
-		} else {
-			fmt.Println("Failed to generate sha256sum for ban_list.txt:", err)
-		}
-
-		serverTomlFile := filepath.Join(filepath.Dir(banListFile), "server.toml")
-		if _, err := os.Stat(serverTomlFile); err == nil {
-			cmdToml := exec.Command("sha256sum", "server.toml")
-			cmdToml.Dir = filepath.Dir(banListFile)
-			outToml, err := cmdToml.Output()
-			if err == nil {
-				_ = ioutil.WriteFile(serverTomlFile+".sha256sum", outToml, 0644)
-			} else {
-				fmt.Println("Failed to generate sha256sum for server.toml:", err)
-			}
-		}
 	} else {
 		fmt.Println("Failed to write to ban list:", err)
 	}
