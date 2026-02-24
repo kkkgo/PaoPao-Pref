@@ -142,7 +142,7 @@ func main() {
 		fmt.Println(r.Name)
 	}
 
-	banListFile := "/data/ban_list.txt"
+	banListFile := "./ban_list.txt"
 	banMap := make(map[string]bool)
 	if data, err := ioutil.ReadFile(banListFile); err == nil {
 		lines := strings.Split(string(data), "\n")
