@@ -1,7 +1,7 @@
 FROM golang:alpine AS builder
 WORKDIR /app
 COPY check.go .
-RUN go mod init check&& go mod download&&go build -ldflags="-s -w" -o check check.go
+RUN go mod init check&& go get -u&&go build -ldflags="-s -w" -o check check.go
 
 FROM alpine:edge
 RUN apk add --no-cache ca-certificates tzdata
