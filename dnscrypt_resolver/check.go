@@ -2,25 +2,133 @@ package main
 
 import (
 	"bufio"
-	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/AdguardTeam/dnsproxy/upstream"
+	"github.com/miekg/dns"
 )
 
 type Resolver struct {
 	Name  string
 	Stamp string
+}
+
+
+func queryUpstream(stamp, host string, qtype uint16) []dns.RR {
+	opts := &upstream.Options{
+		Timeout: 10 * time.Second,
+	}
+	u, err := upstream.AddressToUpstream(stamp, opts)
+	if err != nil {
+		return nil
+	}
+
+	req := &dns.Msg{}
+	req.Id = dns.Id()
+	req.RecursionDesired = true
+	req.Question = []dns.Question{{
+		Name:   dns.Fqdn(host),
+		Qtype:  qtype,
+		Qclass: dns.ClassINET,
+	}}
+
+	reply, err := u.Exchange(req)
+	if err != nil || reply == nil {
+		return nil
+	}
+	return reply.Answer
+}
+
+func lookupA(stamp, host string) []string {
+	ans := queryUpstream(stamp, host, dns.TypeA)
+	var ips []string
+	for _, rr := range ans {
+		if a, ok := rr.(*dns.A); ok {
+			ips = append(ips, a.A.String())
+		}
+	}
+	return ips
+}
+
+func lookupMX(stamp, host string) []string {
+	ans := queryUpstream(stamp, host, dns.TypeMX)
+	var hosts []string
+	for _, rr := range ans {
+		if mx, ok := rr.(*dns.MX); ok {
+			hosts = append(hosts, strings.TrimSuffix(mx.Mx, "."))
+		}
+	}
+	return hosts
+}
+
+func testResolver(res Resolver) string {
+	var gmailMX []string
+	for i := 0; i < 3; i++ {
+		gmailMX = lookupMX(res.Stamp, "gmail.com")
+		if len(gmailMX) > 0 {
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	gmailOk := false
+	for _, mx := range gmailMX {
+		mx = strings.ToLower(mx)
+		if strings.Contains(mx, "smtp") || strings.Contains(mx, "google.com") {
+			gmailOk = true
+			break
+		}
+	}
+	if !gmailOk {
+		return "CONNECT BAD."
+	}
+
+	localIPs := lookupA(res.Stamp, "local.03k.org")
+	for _, ip := range localIPs {
+		if ip == "10.9.8.7" {
+			return "OK."
+		}
+	}
+
+	nipOk := false
+	nip1 := lookupA(res.Stamp, "10.0.0.1.nip.io")
+	for _, ip := range nip1 {
+		if ip == "10.0.0.1" {
+			nipOk = true
+			break
+		}
+	}
+	if nipOk {
+		nipOk = false
+		nip2 := lookupA(res.Stamp, "192-168-1-250.nip.io")
+		for _, ip := range nip2 {
+			if ip == "192.168.1.250" {
+				nipOk = true
+				break
+			}
+		}
+	}
+	if nipOk {
+		return "OK."
+	}
+
+	mxRecords := lookupMX(res.Stamp, "03k.org")
+	for _, mx := range mxRecords {
+		if strings.Contains(strings.ToLower(mx), "qq.com") {
+			return "LOCAL BAD."
+		}
+	}
+
+	return "CONNECT BAD."
 }
 
 func main() {
@@ -80,9 +188,8 @@ func main() {
 
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
-		go func(workerID int) {
+		go func() {
 			defer wg.Done()
-			basePort := 5302 + workerID
 
 			for res := range jobs {
 				mu.Lock()
@@ -99,7 +206,7 @@ func main() {
 				if isKnownBadPrefix {
 					status = "LOCAL BAD."
 				} else {
-					status = testResolver(res, basePort)
+					status = testResolver(res)
 
 					if status == "CONNECT BAD." {
 						mu.Lock()
@@ -121,7 +228,7 @@ func main() {
 
 				results <- result{res.Name, status}
 			}
-		}(i)
+		}()
 	}
 
 	go func() {
@@ -159,22 +266,9 @@ func main() {
 	} else {
 		fmt.Println("Failed to write to ban list:", err)
 	}
-	fmt.Println("Testing completed.")
-
-	if data, err := os.ReadFile(banListFile); err == nil {
-		sum := sha256.Sum256(data)
-		sumLine := hex.EncodeToString(sum[:]) + "  " + filepath.Base(banListFile) + "\n"
-		sumFile := banListFile + ".sha256sum"
-		if err := os.WriteFile(sumFile, []byte(sumLine), 0644); err != nil {
-			fmt.Println("Failed to write sha256sum file:", err)
-		} else {
-			fmt.Printf("SHA256: %s\nChecksum written to %s\n", strings.TrimSpace(sumLine), sumFile)
-		}
-	} else {
-		fmt.Println("Failed to read ban list for hashing:", err)
-	}
 
 	_ = badNew
+	fmt.Println("Testing completed.")
 }
 
 func fetchResolvers() []Resolver {
@@ -221,120 +315,4 @@ func fetchResolvers() []Resolver {
 	})
 
 	return resolvers
-}
-
-func dnsQuery(host string, qtype string, port int) []string {
-	r := &net.Resolver{
-		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			d := net.Dialer{Timeout: 3 * time.Second}
-			return d.DialContext(ctx, "udp", fmt.Sprintf("127.0.0.1:%d", port))
-		},
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	switch strings.ToUpper(qtype) {
-	case "MX":
-		mxs, err := r.LookupMX(ctx, host)
-		if err != nil {
-			return nil
-		}
-		var results []string
-		for _, mx := range mxs {
-			results = append(results, mx.Host)
-		}
-		return results
-	case "A":
-		addrs, err := r.LookupHost(ctx, host)
-		if err != nil {
-			return nil
-		}
-		return addrs
-	}
-	return nil
-}
-
-func testResolver(res Resolver, port int) string {
-	configPath := fmt.Sprintf("/tmp/test_now_%d.toml", port)
-	configContent := fmt.Sprintf(`listen_addresses = ['127.0.0.1:%d']
-server_names = ['test']
-[static]
-  [static.'test']
-  stamp = '%s'
-`, port, res.Stamp)
-
-	err := ioutil.WriteFile(configPath, []byte(configContent), 0644)
-	if err != nil {
-		return "CONFIG ERROR"
-	}
-
-	cmd := exec.Command("dnscrypt-proxy", "-config", configPath)
-	err = cmd.Start()
-	if err != nil {
-		return "START FAILED"
-	}
-
-	defer func() {
-		if cmd.Process != nil {
-			cmd.Process.Kill()
-		}
-		cmd.Wait()
-	}()
-
-	waitForListen(fmt.Sprintf("127.0.0.1:%d", port), time.Second*5)
-
-	var gmailMX []string
-	for i := 0; i < 5; i++ {
-		gmailMX = dnsQuery("gmail.com", "mx", port)
-		if len(gmailMX) > 0 {
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
-
-	gmailOk := false
-	for _, mx := range gmailMX {
-		mx = strings.ToLower(mx)
-		if strings.Contains(mx, "smtp") || strings.Contains(mx, "google.com") {
-			gmailOk = true
-			break
-		}
-	}
-
-	if !gmailOk {
-		return "CONNECT BAD."
-	}
-
-	for _, attempt := range []int{1, 2} {
-		_ = attempt
-		localIPs := dnsQuery("local.03k.org", "a", port)
-		for _, ip := range localIPs {
-			if ip == "10.9.8.7" {
-				return "OK."
-			}
-		}
-	}
-
-	mxRecords := dnsQuery("03k.org", "mx", port)
-	for _, mx := range mxRecords {
-		if strings.Contains(strings.ToLower(mx), "qq.com") {
-			return "LOCAL BAD."
-		}
-	}
-
-	return "CONNECT BAD."
-}
-
-func waitForListen(addr string, timeout time.Duration) bool {
-	start := time.Now()
-	for time.Since(start) < timeout {
-		conn, err := net.DialTimeout("tcp", addr, 100*time.Millisecond)
-		if err == nil {
-			conn.Close()
-			return true
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	return false
 }
