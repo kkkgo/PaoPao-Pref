@@ -22,7 +22,6 @@ type Resolver struct {
 	Stamp string
 }
 
-
 func queryUpstream(stamp, host string, qtype uint16) []dns.RR {
 	opts := &upstream.Options{
 		Timeout: 10 * time.Second,
@@ -71,61 +70,59 @@ func lookupMX(stamp, host string) []string {
 }
 
 func testResolver(res Resolver) string {
-	var gmailMX []string
+	var googleMX []string
 	for i := 0; i < 3; i++ {
-		gmailMX = lookupMX(res.Stamp, "gmail.com")
-		if len(gmailMX) > 0 {
+		googleMX = lookupMX(res.Stamp, "google.com")
+		if len(googleMX) > 0 {
 			break
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	gmailOk := false
-	for _, mx := range gmailMX {
-		mx = strings.ToLower(mx)
-		if strings.Contains(mx, "smtp") || strings.Contains(mx, "google.com") {
-			gmailOk = true
+	commOk := false
+	for _, mx := range googleMX {
+		if strings.Contains(strings.ToLower(mx), "smtp") {
+			commOk = true
 			break
 		}
 	}
-	if !gmailOk {
+	if !commOk {
 		return "CONNECT BAD."
 	}
 
-	localIPs := lookupA(res.Stamp, "local.03k.org")
-	for _, ip := range localIPs {
-		if ip == "10.9.8.7" {
-			return "OK."
+	targets := []struct {
+		domain string
+		ip     string
+	}{
+		{"local.03k.org", "10.9.8.7"},
+		{"10.0.0.1.nip.io", "10.0.0.1"},
+		{"192-168-1-250.nip.io", "192.168.1.250"},
+		{"0a000803.nip.io", "10.0.8.3"},
+	}
+
+	for _, target := range targets {
+		for i := 0; i < 3; i++ {
+			ips := lookupA(res.Stamp, target.domain)
+			for _, ip := range ips {
+				if ip == target.ip {
+					return "OK."
+				}
+			}
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 
-	nipOk := false
-	nip1 := lookupA(res.Stamp, "10.0.0.1.nip.io")
-	for _, ip := range nip1 {
-		if ip == "10.0.0.1" {
-			nipOk = true
+	var wwwGoogleIPs []string
+	for i := 0; i < 3; i++ {
+		wwwGoogleIPs = lookupA(res.Stamp, "www.google.com")
+		if len(wwwGoogleIPs) > 0 {
 			break
 		}
-	}
-	if nipOk {
-		nipOk = false
-		nip2 := lookupA(res.Stamp, "192-168-1-250.nip.io")
-		for _, ip := range nip2 {
-			if ip == "192.168.1.250" {
-				nipOk = true
-				break
-			}
-		}
-	}
-	if nipOk {
-		return "OK."
+		time.Sleep(500 * time.Millisecond)
 	}
 
-	mxRecords := lookupMX(res.Stamp, "03k.org")
-	for _, mx := range mxRecords {
-		if strings.Contains(strings.ToLower(mx), "qq.com") {
-			return "LOCAL BAD."
-		}
+	if len(wwwGoogleIPs) > 0 {
+		return "LOCAL BAD."
 	}
 
 	return "CONNECT BAD."
