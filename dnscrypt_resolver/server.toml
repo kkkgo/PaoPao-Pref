@@ -1,0 +1,43 @@
+[sources]
+
+### An example of a remote source from https://github.com/DNSCrypt/dnscrypt-resolvers
+
+[sources.public-resolvers]
+urls = [
+  'https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md',
+  'https://download.dnscrypt.info/resolvers-list/v3/public-resolvers.md',
+  'https://cdn.jsdelivr.net/gh/DNSCrypt/dnscrypt-resolvers/v3/public-resolvers.md',
+  'https://fastly.jsdelivr.net/gh/DNSCrypt/dnscrypt-resolvers/v3/public-resolvers.md',
+  'https://dnsr.evilvibes.com/v3/public-resolvers.md',
+  'https://cdn.statically.io/gh/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md',
+]
+cache_file = 'public-resolvers.md'
+minisign_key = 'RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3'
+refresh_delay = 73
+prefix = ''
+
+### Anonymized DNS relays
+
+[sources.relays]
+urls = [
+  'https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/relays.md',
+  'https://download.dnscrypt.info/resolvers-list/v3/relays.md',
+  'https://cdn.jsdelivr.net/gh/DNSCrypt/dnscrypt-resolvers/v3/relays.md',
+  'https://fastly.jsdelivr.net/gh/DNSCrypt/dnscrypt-resolvers/v3/relays.md',
+  'https://dnsr.evilvibes.com/v3/relays.md',
+  'https://cdn.statically.io/gh/DNSCrypt/dnscrypt-resolvers/master/v3/relays.md',
+
+]
+cache_file = 'relays.md'
+minisign_key = 'RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3'
+refresh_delay = 73
+prefix = ''
+
+### dnscry.pt servers - See https://www.dnscry.pt
+
+  [sources.dnscry-pt-resolvers]
+    urls = ["https://www.dnscry.pt/resolvers.md"]
+    minisign_key = "RWQM31Nwkqh01x88SvrBL8djp1NH56Rb4mKLHz16K7qsXgEomnDv6ziQ"
+    cache_file = "dnscry.pt-resolvers.md"
+    refresh_delay = 73
+    prefix = "dnscry.pt-"
