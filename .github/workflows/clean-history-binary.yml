@@ -15,13 +15,7 @@ jobs:
   update_data:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
     - uses: kkkgo/Clean-Git-File-History-Action@main
       with:
         size_threshold: 10M
         filenames: '*.xz,*.dat,*.md5sum,*.sha256sum,*.txt'
-    - name: Flash CDN
-      run: |
-          curl -i https://purge.jsdelivr.net/gh/${{ github.repository }}/trackerslist.txt.xz &&
-          curl -i https://purge.jsdelivr.net/gh/${{ github.repository }}/trackerslist.txt.xz.sha256sum
