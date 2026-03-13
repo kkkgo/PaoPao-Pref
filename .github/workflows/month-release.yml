@@ -12,21 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
-    - uses: actions/setup-go@v4
+      uses: actions/checkout@main
+    - uses: actions/setup-go@main
     - name: build binary
       run: sh release.sh
     - name: Set variables
       run: echo "TAG_NAME="data"-$(date +%Y%m%d-%s)" >> $GITHUB_ENV
     - name: Upload files to GitHub release
-      uses: svenstaro/upload-release-action@v2
+      uses: svenstaro/upload-release-action@master
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file_glob: true
         file: ./build/*
         tag: ${{ env.TAG_NAME }}
     - name: Remove old release
-      uses: dev-drprasad/delete-older-releases@v0.2.1
+      uses: dev-drprasad/delete-older-releases@master
       with:
         keep_latest: 1
       env:

@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
     - name: Set up Go
-      uses: actions/setup-go@v6
+      uses: actions/setup-go@main
       with:
         go-version: 'stable'
         check-latest: true
     - name: Setup WARP
-      uses: fscarmen/warp-on-actions@v1.4
+      uses: fscarmen/warp-on-actions@main
       with:
         stack: dual
 #        mode: client
@@ -26,7 +26,7 @@ jobs:
       run: curl https://ip6.03k.org -d" "
     - name: check dnscrypt_resolver
       run: sh dnscrypt_resolver/test.sh
-    - uses: EndBug/add-and-commit@v9
+    - uses: EndBug/add-and-commit@main
       with:
         author_name: Github Actions
         author_email: actions@github.com
