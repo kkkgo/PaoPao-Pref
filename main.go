@@ -49,6 +49,12 @@ var (
 )
 var domainRegex = regexp.MustCompile(`^[A-Za-z0-9.][a-zA-Z0-9.-]+\.[a-zA-Z]{2}[a-zA-Z]*$`)
 
+var (
+	outputFile *os.File
+	outputMu   sync.Mutex
+	statsMu    sync.Mutex
+)
+
 func init() {
 	flag.StringVar(&file, "file", "domains.txt", "text file containing domain names")
 	flag.StringVar(&gbfile, "gbfile", "", "comp")
@@ -70,10 +76,10 @@ func init() {
 	flag.DurationVar(&timeout, "timeout", time.Second*5, "Query timeout")
 	flag.DurationVar(&sleep, "sleep", time.Millisecond*1500, "Query sleep")
 	flag.IntVar(&port, "port", 53, "DNS port")
-	flag.Parse()
 }
 
 func main() {
+	flag.Parse()
 	if help {
 		flag.Usage()
 		os.Exit(0)
@@ -215,6 +221,15 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	if output {
+		var err error
+		outputFile, err = os.OpenFile("domains_ok.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			fmt.Println("Failed to open output file:", err)
+			os.Exit(1)
+		}
+		defer outputFile.Close()
+	}
 	start := time.Now()
 	var elapsed float64
 	var average float64
@@ -224,6 +239,7 @@ func main() {
 	if err != nil {
 		flag.Usage()
 		fmt.Println(err)
+		os.Exit(1)
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
@@ -271,12 +287,11 @@ func main() {
 				newline++
 				continue
 			}
-			if count >= total {
+			if atomic.LoadInt64(&count) >= total {
 				break
 			}
 			domain := scanner.Text()
 			ch <- domain
-			fmt.Printf("\rNslookup %d/%d domains[%.4f%%]. Succ rate:%.2f%%. Avg time: %.6f seconds. Est time: %s.", count, total, 100*float64(count)/float64(total), 100*float64(succ)/float64(count), average, formatDuration(estimate))
 		}
 		if err := scanner.Err(); err != nil {
 			fmt.Println(err)
@@ -288,18 +303,24 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for domain := range ch {
-				now := time.Now()
-				time.Sleep(sleep)
 				if nslookup(domain) {
 					atomic.AddInt64(&succ, 1)
 				}
-				atomic.AddInt64(&count, 1)
-				elapsed = now.Sub(start).Seconds()
-				if count > 0 {
-					average = elapsed / float64(count)
-					estimate = float64(total-count) * average
+				currentCount := atomic.AddInt64(&count, 1)
+				currentSucc := atomic.LoadInt64(&succ)
+
+				statsMu.Lock()
+				elapsed = time.Since(start).Seconds()
+				if currentCount > 0 {
+					average = elapsed / float64(currentCount)
+					estimate = float64(total-currentCount) * average
 				}
-				fmt.Printf("\rNslookup %d/%d domains[%.4f%%]. Succ rate:%.2f%%. Avg time: %.6f seconds. Est time: %s.", count, total, 100*float64(count)/float64(total), 100*float64(succ)/float64(count), average, formatDuration(estimate))
+				avg := average
+				est := estimate
+				statsMu.Unlock()
+
+				fmt.Printf("\rNslookup %d/%d domains[%.4f%%]. Succ rate:%.2f%%. Avg time: %.6f seconds. Est time: %s.", currentCount, total, 100*float64(currentCount)/float64(total), 100*float64(currentSucc)/float64(currentCount), avg, formatDuration(est))
+				time.Sleep(sleep)
 			}
 		}()
 	}
@@ -365,13 +386,12 @@ func formatDuration(seconds float64) string {
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, int(seconds))
 }
 func appendToFile(content string) {
-	f, err := os.OpenFile("domains_ok.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		fmt.Println(err)
+	outputMu.Lock()
+	defer outputMu.Unlock()
+	if outputFile == nil {
+		return
 	}
-	defer f.Close()
-
-	if _, err = f.WriteString(content + "\n"); err != nil {
+	if _, err := outputFile.WriteString(content + "\n"); err != nil {
 		fmt.Println(err)
 	}
 }
@@ -438,15 +458,12 @@ func filterRules(inputFile, filterFile, outputFile string) error {
 	defer output.Close()
 	fmt.Fprintln(output)
 
+	fRoot := newTrieNode()
+	for _, fKeyword := range fRules {
+		fRoot.insert(splitDomainParts(fKeyword))
+	}
 	for _, iKeyword := range iRules {
-		global := true
-		for _, fKeyword := range fRules {
-			if strings.HasSuffix(iKeyword, fKeyword) {
-				global = false
-				break
-			}
-		}
-		if global {
+		if !fRoot.hasAncestor(splitDomainParts(iKeyword)) {
 			fmt.Fprintln(output, "domain:"+iKeyword)
 		}
 	}
@@ -469,37 +486,15 @@ func convertRules(inputFile, outputFile string) error {
 	scanner := bufio.NewScanner(input)
 	writer := bufio.NewWriter(output)
 	convertedRules := make(map[string]bool)
-	batchSize := 1000000
 
-	for {
-		lines := make([]string, 0, batchSize)
-		for i := 0; i < batchSize && scanner.Scan(); i++ {
-			line := scanner.Text()
-			lines = append(lines, line)
-		}
-		fmt.Println("read domains.")
-		var wg sync.WaitGroup
-		mu := sync.Mutex{}
-
-		for _, line := range lines {
-			wg.Add(1)
-			go func(line string) {
-				defer wg.Done()
-				convertedRule := addDotIfMissing(convertRule(line))
-				if convertedRule != "" {
-					mu.Lock()
-					convertedRules[convertedRule] = true
-					mu.Unlock()
-				}
-			}(line)
-		}
-
-		wg.Wait()
-
-		if len(lines) < batchSize {
-			break
+	for scanner.Scan() {
+		line := scanner.Text()
+		convertedRule := addDotIfMissing(convertRule(line))
+		if convertedRule != "" {
+			convertedRules[convertedRule] = true
 		}
 	}
+	fmt.Println("read domains.")
 
 	if scanner.Err() != nil {
 		return scanner.Err()
@@ -524,31 +519,89 @@ func convertRules(inputFile, outputFile string) error {
 	fmt.Println("Conversion completed successfully.")
 	return nil
 }
+type trieNode struct {
+	children map[string]*trieNode
+	isEnd    bool
+}
+
+func newTrieNode() *trieNode {
+	return &trieNode{children: make(map[string]*trieNode)}
+}
+
+// hasAncestor checks if any ancestor (shorter suffix) is already marked as end.
+func (t *trieNode) hasAncestor(parts []string) bool {
+	node := t
+	for _, part := range parts {
+		child, ok := node.children[part]
+		if !ok {
+			return false
+		}
+		if child.isEnd {
+			return true
+		}
+		node = child
+	}
+	return false
+}
+
+func (t *trieNode) insert(parts []string) {
+	node := t
+	for _, part := range parts {
+		child, ok := node.children[part]
+		if !ok {
+			child = newTrieNode()
+			node.children[part] = child
+		}
+		node = child
+	}
+	node.isEnd = true
+}
+
+// splitDomainParts splits a domain and returns reversed non-empty parts for trie operations.
+func splitDomainParts(domain string) []string {
+	raw := strings.Split(domain, ".")
+	parts := make([]string, 0, len(raw))
+	for _, p := range raw {
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	// Reverse so TLD comes first (suffix matching becomes prefix matching).
+	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
+		parts[i], parts[j] = parts[j], parts[i]
+	}
+	return parts
+}
+
 func mergeDomains(domains []string) []string {
-	result := make([]string, 0, len(domains))
+	seen := make(map[string]struct{}, len(domains))
 	uniqueDomains := make([]string, 0, len(domains))
-	seen := make(map[string]struct{})
 	for _, domain := range domains {
 		if _, ok := seen[domain]; !ok {
 			seen[domain] = struct{}{}
 			uniqueDomains = append(uniqueDomains, domain)
 		}
 	}
+	// Sort by number of non-empty parts (shorter domains first).
 	sort.Slice(uniqueDomains, func(i, j int) bool {
-		return len(uniqueDomains[i]) < len(uniqueDomains[j])
+		ci := strings.Count(strings.Trim(uniqueDomains[i], "."), ".")
+		cj := strings.Count(strings.Trim(uniqueDomains[j], "."), ".")
+		return ci < cj
 	})
 
+	root := newTrieNode()
+	result := make([]string, 0, len(uniqueDomains))
+
 	for _, domain := range uniqueDomains {
-		found := false
-		for _, uniqueDomain := range result {
-			if strings.HasSuffix(domain, uniqueDomain) {
-				found = true
-				break
-			}
+		parts := splitDomainParts(domain)
+		if len(parts) == 0 {
+			continue
 		}
-		if !found {
-			result = append(result, domain)
+		if root.hasAncestor(parts) {
+			continue
 		}
+		root.insert(parts)
+		result = append(result, domain)
 	}
 
 	return result
@@ -556,14 +609,15 @@ func mergeDomains(domains []string) []string {
 
 func reverseDomain(domain string) string {
 	parts := strings.Split(domain, ".")
-	reversed := ""
+	var b strings.Builder
+	b.Grow(len(domain))
 	for i := len(parts) - 1; i >= 0; i-- {
-		reversed += parts[i]
+		b.WriteString(parts[i])
 		if i != 0 {
-			reversed += "."
+			b.WriteByte('.')
 		}
 	}
-	return reversed
+	return b.String()
 }
 
 func extractMainDomain(domain string) string {
@@ -659,27 +713,23 @@ func processCNFile(cnFile string, globalKeywords []string, globalRules []string,
 		fmt.Fprintln(result, strings.Replace(line, "domain:", "#@domain:", 1))
 	}
 	fmt.Fprintln(result)
+	// Build tries for fast suffix matching
+	gkRoot := newTrieNode()
+	for _, gk := range globalKeywords {
+		gkRoot.insert(splitDomainParts(gk))
+	}
+	grRoot := newTrieNode()
+	for _, gr := range globalRules {
+		grRoot.insert(splitDomainParts(gr))
+	}
+
 	cnScanner := bufio.NewScanner(cn)
 	for cnScanner.Scan() {
 		line := cnScanner.Text()
 		keyword := strings.TrimPrefix(line, "domain:")
-
-		for _, globalKeyword := range globalKeywords {
-			if strings.HasSuffix(keyword, globalKeyword) {
-				global := false
-				for _, globalRule := range globalRules {
-					if strings.HasSuffix(keyword, globalRule) {
-						global = true
-						break
-					}
-				}
-				if !global {
-					fmt.Fprintln(result, strings.Replace(line, "domain:", "##@@domain:", 1))
-				}
-				break
-			}
+		if gkRoot.hasAncestor(splitDomainParts(keyword)) && !grRoot.hasAncestor(splitDomainParts(keyword)) {
+			fmt.Fprintln(result, strings.Replace(line, "domain:", "##@@domain:", 1))
 		}
-
 	}
 	fmt.Fprintln(result)
 
