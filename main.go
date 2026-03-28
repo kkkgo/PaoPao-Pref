@@ -237,26 +237,26 @@ func main() {
 		var err error
 		matcher, err = LoadDat(cndat)
 		if err != nil {
-			fmt.Println("Failed to load CN dat:", err)
+			fmt.Fprintln(os.Stderr, "Failed to load CN dat:", err)
 			os.Exit(1)
 		}
-		fmt.Printf("Loaded CN dat: %d CN, %d PRIVATE, %d CLOUDFLARE CIDRs\n", len(matcher.cn), len(matcher.private), len(matcher.cloudflare))
+		fmt.Fprintf(os.Stderr, "Loaded CN dat: %d CN, %d PRIVATE, %d CLOUDFLARE CIDRs\n", len(matcher.cn), len(matcher.private), len(matcher.cloudflare))
 	}
 	if cnmode != "" && matcher == nil {
-		fmt.Println("cnmode requires -cndat")
+		fmt.Fprintln(os.Stderr, "cnmode requires -cndat")
 		os.Exit(1)
 	}
 	if skipfile != "" {
 		skipKeywords, err := readKeywords(skipfile)
 		if err != nil {
-			fmt.Println("Failed to read skipfile:", err)
+			fmt.Fprintln(os.Stderr, "Failed to read skipfile:", err)
 			os.Exit(1)
 		}
 		skipRoot = newTrieNode()
 		for _, kw := range skipKeywords {
 			skipRoot.insert(splitDomainParts(kw))
 		}
-		fmt.Printf("Loaded skip list: %d domains\n", len(skipKeywords))
+		fmt.Fprintf(os.Stderr, "Loaded skip list: %d domains\n", len(skipKeywords))
 	}
 	if delay {
 		if check_delay("www.taobao.com") {
