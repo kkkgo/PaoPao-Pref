@@ -20,37 +20,37 @@ import (
 )
 
 var (
-	file     string
-	gbfile   string
-	grfile   string
-	crfile   string
-	cnfile   string
-	comp     string
-	inrule   string
-	filter   string
-	outrule  string
-	limit    int
-	line     int
-	pc       int
-	count    int64
-	succ     int64
-	total    int64
-	wg       sync.WaitGroup
-	help     bool
-	analyze  bool
-	verbose  bool
-	delay    bool
-	server   string
-	port     int
-	output   bool
-	timeout  time.Duration
-	sleep    time.Duration
-	resolver *net.Resolver
-	cndat    string
-	cnmode   string
-	skipfile string
-	matcher  *CIDRMatcher
-	skipRoot *trieNode
+	file      string
+	gbfile    string
+	grfile    string
+	crfile    string
+	cnfile    string
+	comp      string
+	inrule    string
+	filter    string
+	outrule   string
+	limit     int
+	line      int
+	pc        int
+	count     int64
+	succ      int64
+	total     int64
+	wg        sync.WaitGroup
+	help      bool
+	analyze   bool
+	verbose   bool
+	delay     bool
+	server    string
+	port      int
+	output    bool
+	timeout   time.Duration
+	sleep     time.Duration
+	resolver  *net.Resolver
+	cndat     string
+	cnmode    string
+	skipfile  string
+	matcher   *CIDRMatcher
+	skipRoot  *trieNode
 	version   = "unknown"
 	buildDate = "unknown"
 	gitHash   = "unknown"
@@ -240,7 +240,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "Failed to load CN dat:", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stderr, "Loaded CN dat: %d CN, %d PRIVATE, %d CLOUDFLARE CIDRs\n", len(matcher.cn), len(matcher.private), len(matcher.cloudflare))
+		//fmt.Fprintf(os.Stderr, "Loaded CN dat: %d CN, %d PRIVATE, %d CLOUDFLARE CIDRs\n", len(matcher.cn), len(matcher.private), len(matcher.cloudflare))
 	}
 	if cnmode != "" && matcher == nil {
 		fmt.Fprintln(os.Stderr, "cnmode requires -cndat")
@@ -295,19 +295,33 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("Percentage :", pc, "%")
-	fmt.Println("Total Line :", total)
-	fmt.Println("Concurrency Limit:", limit)
-	fmt.Println("Timeout:", timeout)
-	fmt.Println("Sleep:", sleep)
 	var dnsserver string
 	if server == "" {
 		dnsserver = "system default"
 	} else {
 		dnsserver = server
 	}
-	fmt.Println("DNS Server:", dnsserver)
-	fmt.Println("DNS Port:", port)
+	if cnmode != "" {
+		fmt.Println("== CN Filter Mode ==")
+		fmt.Println("Mode     :", cnmode)
+		fmt.Println("CN Dat   :", cndat)
+		if skipfile != "" {
+			fmt.Println("Skip File:", skipfile)
+		}
+		fmt.Println("DNS Server:", dnsserver)
+		fmt.Println("DNS Port  :", port)
+		fmt.Println("Total     :", total)
+		fmt.Println("Limit     :", limit)
+		fmt.Println("Timeout   :", timeout)
+	} else {
+		fmt.Println("Percentage :", pc, "%")
+		fmt.Println("Total Line :", total)
+		fmt.Println("Concurrency Limit:", limit)
+		fmt.Println("Timeout:", timeout)
+		fmt.Println("Sleep:", sleep)
+		fmt.Println("DNS Server:", dnsserver)
+		fmt.Println("DNS Port:", port)
+	}
 	f.Seek(0, 0)
 	if line > 0 {
 		fmt.Println("Test :", line, "~", total)
@@ -369,7 +383,11 @@ func main() {
 				est := estimate
 				statsMu.Unlock()
 
-				fmt.Printf("\rNslookup %d/%d domains[%.4f%%]. Succ rate:%.2f%%. Avg time: %.6f seconds. Est time: %s.", currentCount, total, 100*float64(currentCount)/float64(total), 100*float64(currentSucc)/float64(currentCount), avg, formatDuration(est))
+				if cnmode != "" {
+					fmt.Printf("\r[%s] %d/%d [%.2f%%] matched: %d | avg: %.4fs | ETA: %s", cnmode, currentCount, total, 100*float64(currentCount)/float64(total), currentSucc, avg, formatDuration(est))
+				} else {
+					fmt.Printf("\rNslookup %d/%d domains[%.4f%%]. Succ rate:%.2f%%. Avg time: %.6f seconds. Est time: %s.", currentCount, total, 100*float64(currentCount)/float64(total), 100*float64(currentSucc)/float64(currentCount), avg, formatDuration(est))
+				}
 				time.Sleep(sleep)
 			}
 		}()
@@ -378,12 +396,20 @@ func main() {
 	case <-sig:
 		end := time.Now()
 		duration := end.Sub(start).Seconds()
-		fmt.Printf("\nInterrupted. Processed %d/%d domains in %.2f seconds.\n", count, total, duration)
+		if cnmode != "" {
+			fmt.Printf("\n[%s] Interrupted. %d/%d, matched: %d in %.2fs.\n", cnmode, count, total, succ, duration)
+		} else {
+			fmt.Printf("\nInterrupted. Processed %d/%d domains in %.2f seconds.\n", count, total, duration)
+		}
 		os.Exit(0)
 	case <-wait(&wg):
 		end := time.Now()
 		duration := end.Sub(start).Seconds()
-		fmt.Printf("\nDone. Processed %d/%d domains in %.2f seconds.\n", count, total, duration)
+		if cnmode != "" {
+			fmt.Printf("\n[%s] Done. %d/%d, matched: %d in %.2fs.\n", cnmode, count, total, succ, duration)
+		} else {
+			fmt.Printf("\nDone. Processed %d/%d domains in %.2f seconds.\n", count, total, duration)
+		}
 	}
 }
 
@@ -648,6 +674,7 @@ func convertRules(inputFile, outputFile string) error {
 	fmt.Println("Conversion completed successfully.")
 	return nil
 }
+
 type trieNode struct {
 	children map[string]*trieNode
 	isEnd    bool
