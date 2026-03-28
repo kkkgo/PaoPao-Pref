@@ -1,5 +1,4 @@
 name: update_runner-docker-only
-
 on:
   workflow_dispatch:
 permissions:
@@ -8,7 +7,6 @@ permissions:
 jobs:
   build_runner:
     runs-on: ubuntu-latest
-    steps:
     steps:
       - name: "Configure AWS Credentials"
         uses: aws-actions/configure-aws-credentials@main
