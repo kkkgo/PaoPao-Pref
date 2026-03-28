@@ -51,6 +51,10 @@ var (
 	skipfile string
 	matcher  *CIDRMatcher
 	skipRoot *trieNode
+	version   = "unknown"
+	buildDate = "unknown"
+	gitHash   = "unknown"
+	showVer   bool
 )
 var domainRegex = regexp.MustCompile(`^[A-Za-z0-9.][a-zA-Z0-9.-]+\.[a-zA-Z]{2}[a-zA-Z]*$`)
 
@@ -84,10 +88,17 @@ func init() {
 	flag.StringVar(&cndat, "cndat", "", "path to CN-local.dat file")
 	flag.StringVar(&cnmode, "cnmode", "", "CN verification mode: check|mark|cnmark")
 	flag.StringVar(&skipfile, "skipfile", "", "path to skip list file (domains to skip in mark/cnmark modes)")
+	flag.BoolVar(&showVer, "version", false, "display version information")
 }
 
 func main() {
 	flag.Parse()
+	if showVer {
+		fmt.Printf("paopao-pref version: %s\n", version)
+		fmt.Printf("build date: %s\n", buildDate)
+		fmt.Printf("git hash: %s\n", gitHash)
+		os.Exit(0)
+	}
 	if help {
 		flag.Usage()
 		os.Exit(0)

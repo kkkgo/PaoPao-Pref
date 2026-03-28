@@ -1,8 +1,11 @@
 FROM alpine:edge AS builder
 COPY . /src/
 WORKDIR /src
-RUN apk update && apk add go
-RUN go mod init paopao-pref && go get -u && go build -ldflags "-s -w" -trimpath -o /paopao-pref
+RUN apk update && apk add go git
+ARG version=unknown
+ARG buildDate=unknown
+ARG gitHash=unknown
+RUN go mod init paopao-pref && go get -u && go build -ldflags "-s -w -X main.version=${version} -X main.buildDate=${buildDate} -X main.gitHash=${gitHash}" -trimpath -o /paopao-pref
 FROM alpine:edge
 COPY --from=builder /paopao-pref /usr/bin/
 ADD https://github.com/kkkgo/PaoPao-Pref/raw/main/domains.txt /data/
