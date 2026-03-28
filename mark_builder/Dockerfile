@@ -12,8 +12,7 @@ RUN apk update && \
     apk add --no-cache xz && \
     rm -rf /var/cache/apk/*
 COPY --from=sliamb/paopao-pref /usr/bin/paopao-pref /usr/bin/
-COPY --from=sliamb/paopaodns /usr/sbin/mosdns /usr/bin/
-COPY --from=download /data/Country-only-cn-private.mmdb /data/
+COPY --from=download /data/CN-local.dat /data/
 COPY --from=download /data/cn.rules /data/
 COPY --from=download /data/global.cnfilter.rules /data/
 COPY --from=download /data/global.rules /data/
@@ -21,7 +20,6 @@ COPY --from=download /data/alreadymark.skip.rules /data/
 COPY --from=download /data/topdomains.txt /data/
 COPY --from=download /data/topdomains.rules /data/
 COPY dns_list.txt /data/
-COPY test_cn.yaml /data/
 COPY mark_update.sh /data/
 ENV TZ=Asia/Shanghai \
     DNS_SERVER="" \

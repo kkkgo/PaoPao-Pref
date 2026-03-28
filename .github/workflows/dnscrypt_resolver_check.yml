@@ -1,4 +1,4 @@
-name: dnscrypt_resolver_test
+name: dnscrypt_resolver_check
 on:
   schedule:
     - cron: '30 22 * * 1'

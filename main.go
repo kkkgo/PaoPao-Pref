@@ -46,6 +46,11 @@ var (
 	timeout  time.Duration
 	sleep    time.Duration
 	resolver *net.Resolver
+	cndat    string
+	cnmode   string
+	skipfile string
+	matcher  *CIDRMatcher
+	skipRoot *trieNode
 )
 var domainRegex = regexp.MustCompile(`^[A-Za-z0-9.][a-zA-Z0-9.-]+\.[a-zA-Z]{2}[a-zA-Z]*$`)
 
@@ -76,6 +81,9 @@ func init() {
 	flag.DurationVar(&timeout, "timeout", time.Second*5, "Query timeout")
 	flag.DurationVar(&sleep, "sleep", time.Millisecond*1500, "Query sleep")
 	flag.IntVar(&port, "port", 53, "DNS port")
+	flag.StringVar(&cndat, "cndat", "", "path to CN-local.dat file")
+	flag.StringVar(&cnmode, "cnmode", "", "CN verification mode: check|mark|cnmark")
+	flag.StringVar(&skipfile, "skipfile", "", "path to skip list file (domains to skip in mark/cnmark modes)")
 }
 
 func main() {
@@ -214,6 +222,31 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	if cndat != "" {
+		var err error
+		matcher, err = LoadDat(cndat)
+		if err != nil {
+			fmt.Println("Failed to load CN dat:", err)
+			os.Exit(1)
+		}
+		fmt.Printf("Loaded CN dat: %d CN, %d PRIVATE, %d CLOUDFLARE CIDRs\n", len(matcher.cn), len(matcher.private), len(matcher.cloudflare))
+	}
+	if cnmode != "" && matcher == nil {
+		fmt.Println("cnmode requires -cndat")
+		os.Exit(1)
+	}
+	if skipfile != "" {
+		skipKeywords, err := readKeywords(skipfile)
+		if err != nil {
+			fmt.Println("Failed to read skipfile:", err)
+			os.Exit(1)
+		}
+		skipRoot = newTrieNode()
+		for _, kw := range skipKeywords {
+			skipRoot.insert(splitDomainParts(kw))
+		}
+		fmt.Printf("Loaded skip list: %d domains\n", len(skipKeywords))
+	}
 	if delay {
 		if check_delay("www.taobao.com") {
 			os.Exit(0)
@@ -303,7 +336,13 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for domain := range ch {
-				if nslookup(domain) {
+				var ok bool
+				if cnmode != "" {
+					ok = cnQuery(domain)
+				} else {
+					ok = nslookup(domain)
+				}
+				if ok {
 					atomic.AddInt64(&succ, 1)
 				}
 				currentCount := atomic.AddInt64(&count, 1)
@@ -361,12 +400,91 @@ func nslookup(domain string) bool {
 
 func check_delay(domain string) bool {
 	start := time.Now()
-	result := nslookup(domain)
+	var result bool
+	if cnmode != "" {
+		result = cnQuery(domain)
+	} else {
+		result = nslookup(domain)
+	}
 	elapsed := time.Since(start)
 	if result {
 		fmt.Printf("%d", elapsed.Milliseconds())
 		return true
 	} else {
+		return false
+	}
+}
+
+// cnQuery performs a DNS lookup and checks the result IPs against CN/PRIVATE/CLOUDFLARE CIDRs.
+// Returns true/false based on cnmode:
+//   - "check": true if any response IPv4 is CN
+//   - "mark": true if resolved and NO response IP is CN/PRIVATE/CLOUDFLARE (global domain)
+//   - "cnmark": true if any response IPv4 is CN
+func cnQuery(domain string) bool {
+	domain = strings.Replace(domain, "domain:.", "", 1)
+	domain = strings.Replace(domain, "domain:", "", 1)
+
+	if skipRoot != nil && skipRoot.hasAncestor(splitDomainParts(addDotIfMissing(domain))) {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	addrs, err := resolver.LookupIPAddr(ctx, domain)
+	if err != nil {
+		if verbose {
+			fmt.Printf("\n\033[33m%s\033[0m\n", err)
+		}
+		return false
+	}
+
+	// Filter to IPv4 only
+	var ipv4s []net.IP
+	for _, addr := range addrs {
+		if ip4 := addr.IP.To4(); ip4 != nil {
+			ipv4s = append(ipv4s, ip4)
+		}
+	}
+	if len(ipv4s) == 0 {
+		return false
+	}
+
+	if verbose {
+		fmt.Printf("\n\033[31m%s\033[0m\033[32m%v\033[0m\n", domain, ipv4s)
+	}
+
+	switch cnmode {
+	case "check":
+		for _, ip := range ipv4s {
+			if matcher.MatchCN(ip) {
+				if output {
+					appendToFile(domain)
+				}
+				return true
+			}
+		}
+		return false
+	case "mark":
+		for _, ip := range ipv4s {
+			if matcher.MatchCN(ip) || matcher.MatchPrivate(ip) || matcher.MatchCloudflare(ip) {
+				return false
+			}
+		}
+		if output {
+			appendToFile(domain)
+		}
+		return true
+	case "cnmark":
+		for _, ip := range ipv4s {
+			if matcher.MatchCN(ip) {
+				if output {
+					appendToFile(domain)
+				}
+				return true
+			}
+		}
+		return false
+	default:
 		return false
 	}
 }
