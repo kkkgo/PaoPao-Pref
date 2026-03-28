@@ -9,6 +9,10 @@ jobs:
   build_runner:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup WARP
+        uses: fscarmen/warp-on-actions@main
+        with:
+          stack: dual
       - uses: actions/checkout@main
       - uses: actions/checkout@main
         with:
