@@ -24,8 +24,8 @@ jobs:
         uses: actions/checkout@main
       - name: pull
         run: docker pull ${{ secrets.ECR_TAG_DATA }} >/dev/null
-      - name: run
-        run: docker run -d --name data ${{ secrets.ECR_TAG_DATA }}
+      - name: create
+        run: docker create --name data ${{ secrets.ECR_TAG_DATA }}
       - name: cp global_mark.dat.sha256sum
         run: docker cp data:/pub/global_mark.dat.sha256sum global_mark.dat.sha256sum
       - name: cp global_mark.dat
