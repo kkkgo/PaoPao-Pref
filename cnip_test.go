@@ -72,17 +72,9 @@ func buildTestDat() []byte {
 	}
 	privateEntry := encGeoIP("private", privateCIDRs)
 
-	// CLOUDFLARE entries: 104.16.0.0/12, 172.64.0.0/13
-	cfCIDRs := [][]byte{
-		encCIDR(net.IP{104, 16, 0, 0}, 12),
-		encCIDR(net.IP{172, 64, 0, 0}, 13),
-	}
-	cfEntry := encGeoIP("cloudflare", cfCIDRs)
-
 	// GeoIPList: field 1 repeated
 	buf = append(buf, encLD(1, cnEntry)...)
 	buf = append(buf, encLD(1, privateEntry)...)
-	buf = append(buf, encLD(1, cfEntry)...)
 
 	return buf
 }
@@ -113,9 +105,6 @@ func TestParseDatFile(t *testing.T) {
 	}
 	if len(m.private) != 3 {
 		t.Errorf("expected 3 PRIVATE entries, got %d", len(m.private))
-	}
-	if len(m.cloudflare) != 2 {
-		t.Errorf("expected 2 CLOUDFLARE entries, got %d", len(m.cloudflare))
 	}
 }
 
@@ -153,33 +142,13 @@ func TestCIDRMatcherMatchPrivate(t *testing.T) {
 		{"192.168.1.1", true},
 		{"127.0.0.1", true},
 		{"8.8.8.8", false},
-		{"172.17.0.1", false}, // not in our test data (we only have 172.64.0.0/13 in cloudflare)
+		{"172.17.0.1", false},
 	}
 	for _, tt := range tests {
 		ip := net.ParseIP(tt.ip)
 		got := m.MatchPrivate(ip)
 		if got != tt.expected {
 			t.Errorf("MatchPrivate(%s) = %v, want %v", tt.ip, got, tt.expected)
-		}
-	}
-}
-
-func TestCIDRMatcherMatchCloudflare(t *testing.T) {
-	m := loadTestMatcher(t)
-
-	tests := []struct {
-		ip       string
-		expected bool
-	}{
-		{"104.21.21.239", true},
-		{"172.67.201.108", true},
-		{"8.8.8.8", false},
-	}
-	for _, tt := range tests {
-		ip := net.ParseIP(tt.ip)
-		got := m.MatchCloudflare(ip)
-		if got != tt.expected {
-			t.Errorf("MatchCloudflare(%s) = %v, want %v", tt.ip, got, tt.expected)
 		}
 	}
 }

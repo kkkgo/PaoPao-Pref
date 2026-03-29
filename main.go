@@ -240,7 +240,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "Failed to load CN dat:", err)
 			os.Exit(1)
 		}
-		//fmt.Fprintf(os.Stderr, "Loaded CN dat: %d CN, %d PRIVATE, %d CLOUDFLARE CIDRs\n", len(matcher.cn), len(matcher.private), len(matcher.cloudflare))
+		//fmt.Fprintf(os.Stderr, "Loaded CN dat: %d CN, %d PRIVATE CIDRs\n", len(matcher.cn), len(matcher.private))
 	}
 	if cnmode != "" && matcher == nil {
 		fmt.Fprintln(os.Stderr, "cnmode requires -cndat")
@@ -452,10 +452,10 @@ func check_delay(domain string) bool {
 	}
 }
 
-// cnQuery performs a DNS lookup and checks the result IPs against CN/PRIVATE/CLOUDFLARE CIDRs.
+// cnQuery performs a DNS lookup and checks the result IPs against CN/PRIVATE CIDRs.
 // Returns true/false based on cnmode:
 //   - "check": true if any response IPv4 is CN
-//   - "mark": true if resolved and NO response IP is CN/PRIVATE/CLOUDFLARE (global domain)
+//   - "mark": true if resolved and NO response IP is CN/PRIVATE (global domain)
 //   - "cnmark": true if any response IPv4 is CN
 func cnQuery(domain string) bool {
 	domain = strings.Replace(domain, "domain:.", "", 1)
@@ -503,7 +503,7 @@ func cnQuery(domain string) bool {
 		return false
 	case "mark":
 		for _, ip := range ipv4s {
-			if matcher.MatchCN(ip) || matcher.MatchPrivate(ip) || matcher.MatchCloudflare(ip) {
+			if matcher.MatchCN(ip) || matcher.MatchPrivate(ip) {
 				return false
 			}
 		}

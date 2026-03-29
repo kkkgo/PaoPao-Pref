@@ -7,12 +7,9 @@ import (
 	"strings"
 )
 
-// CIDRMatcher holds parsed CIDR networks from a CN-local.dat file,
-// grouped by country code (cn, private, cloudflare).
 type CIDRMatcher struct {
-	cn         []*net.IPNet
-	private    []*net.IPNet
-	cloudflare []*net.IPNet
+	cn      []*net.IPNet
+	private []*net.IPNet
 }
 
 // LoadDat reads a v2ray-format GeoIPList protobuf file and returns a CIDRMatcher.
@@ -40,8 +37,6 @@ func LoadDat(path string) (*CIDRMatcher, error) {
 			m.cn = nets
 		case "private":
 			m.private = nets
-		case "cloudflare":
-			m.cloudflare = nets
 		}
 	}
 	if len(m.cn) == 0 {
@@ -59,10 +54,6 @@ func (m *CIDRMatcher) MatchCN(ip net.IP) bool {
 
 func (m *CIDRMatcher) MatchPrivate(ip net.IP) bool {
 	return matchNets(ip, m.private)
-}
-
-func (m *CIDRMatcher) MatchCloudflare(ip net.IP) bool {
-	return matchNets(ip, m.cloudflare)
 }
 
 func (m *CIDRMatcher) MatchCNOrPrivate(ip net.IP) bool {
