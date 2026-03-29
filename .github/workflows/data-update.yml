@@ -56,9 +56,16 @@ jobs:
         run: cp ./data/*.rules ./mark_builder/
       - name: build runner
         run: cd mark_builder && docker build --no-cache --progress=plain -t runner .
-      - name: login docker
-        run: echo ${{ secrets.TDOCKERHUB_TOKEN }} | docker login ${{ secrets.TDOCKERHUB_LOGIN }} --username ${{ secrets.TDOCKERHUB_USERNAME }} --password-stdin
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@main
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@main
       - name: tag
-        run: docker tag runner ${{ secrets.TDOCKERHUB_TAG_RUNNER }}
+        run: docker tag runner ${{ secrets.ECR_TAG_RUNNER }}
       - name: push
-        run: docker push ${{ secrets.TDOCKERHUB_TAG_RUNNER }} >/dev/null
+        run: docker push ${{ secrets.ECR_TAG_RUNNER }} >/dev/null

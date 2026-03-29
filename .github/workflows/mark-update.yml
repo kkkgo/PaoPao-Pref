@@ -11,14 +11,21 @@ jobs:
   update_mark:
     runs-on: ubuntu-latest
     steps:
-      - name: login docker
-        run: echo ${{ secrets.TDOCKERHUB_TOKEN }} | docker login ${{ secrets.TDOCKERHUB_LOGIN }} --username ${{ secrets.TDOCKERHUB_USERNAME }} --password-stdin
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@main
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@main
       - name: Checkout code
         uses: actions/checkout@main
       - name: pull
-        run: docker pull ${{ secrets.TDOCKERHUB_TAG }} >/dev/null
+        run: docker pull ${{ secrets.ECR_TAG_DATA }} >/dev/null
       - name: run
-        run: docker run -d --name data ${{ secrets.TDOCKERHUB_TAG }}
+        run: docker run -d --name data ${{ secrets.ECR_TAG_DATA }}
       - name: cp global_mark.dat.sha256sum
         run: docker cp data:/pub/global_mark.dat.sha256sum global_mark.dat.sha256sum
       - name: cp global_mark.dat
@@ -29,30 +36,10 @@ jobs:
          author_email: actions@github.com
          committer_email: actions@github.com
          
-  # build_mark:
-  #   needs: update_mark
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Set up QEMU
-  #       uses: docker/setup-qemu-action@v3
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
-  #     - name: Login to Docker Hub
-  #       uses: docker/login-action@v3
-  #       with:
-  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
-  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
-  #     - name: Build and push
-  #       uses: docker/build-push-action@v5
-  #       with:
-  #         push: true
-  #         context: "{{defaultContext}}:mark_builder"
-  #         platforms: linux/amd64
-  #         tags: sliamb/mark_builder:latest
+
 
   build_runner:
     # needs: build_mark
-    needs: update_mark
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
@@ -65,9 +52,16 @@ jobs:
         run: cp ./data/*.rules ./mark_builder/
       - name: build runner
         run: cd mark_builder && docker build --no-cache --progress=plain -t runner .
-      - name: login docker
-        run: echo ${{ secrets.TDOCKERHUB_TOKEN }} | docker login ${{ secrets.TDOCKERHUB_LOGIN }} --username ${{ secrets.TDOCKERHUB_USERNAME }} --password-stdin
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@main
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@main
       - name: tag
-        run: docker tag runner ${{ secrets.TDOCKERHUB_TAG_RUNNER }}
+        run: docker tag runner ${{ secrets.ECR_TAG_RUNNER }}
       - name: push
-        run: docker push ${{ secrets.TDOCKERHUB_TAG_RUNNER }} >/dev/null
+        run: docker push ${{ secrets.ECR_TAG_RUNNER }} >/dev/null
