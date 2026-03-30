@@ -3,6 +3,7 @@ adfilter-adl-ipv6
 adfilter-per
 adfilter-per-ipv6
 adfilter-syd
+adfilter-syd-ipv6
 brahma-world
 brahma-world-ipv6
 dct-de
