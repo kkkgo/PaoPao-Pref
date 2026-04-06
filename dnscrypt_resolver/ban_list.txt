@@ -7,6 +7,7 @@ adfilter-syd-ipv6
 brahma-world
 brahma-world-ipv6
 dct-de
+dct-de2
 dct-fr
 dnsbunker
 doh.ibksturm
