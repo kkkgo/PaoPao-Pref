@@ -16,6 +16,7 @@ doh.tiar.app-doh
 doh.tiarap.org
 doh.tiarap.org-ipv6
 ibksturm
+ibksturm-6
 jp.tiar.app
 jp.tiar.app-doh
 jp.tiar.app-doh-ipv6
