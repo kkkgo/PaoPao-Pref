@@ -10,6 +10,11 @@ dct-de
 dct-de2
 dct-fr
 dnsbunker
+dnscry.pt-doh-allentown-ipv4
+dnscry.pt-doh-durham-ipv6
+dnscry.pt-doh-houston-ipv4
+dnscry.pt-doh-portedwards-ipv4
+dnscry.pt-doh-toronto-ipv6
 doh.ibksturm
 doh.tiar.app
 doh.tiar.app-doh
