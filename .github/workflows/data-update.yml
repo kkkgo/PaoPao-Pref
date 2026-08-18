@@ -15,11 +15,7 @@ jobs:
       uses: actions/checkout@main
     - name: Update data
       run: sh update_data.sh
-    - uses: EndBug/add-and-commit@main
-      with:
-        author_name: Github Actions
-        author_email: actions@github.com
-        committer_email: actions@github.com
+    - uses: kkkgo/Git-Commit-Action@main
 
   build_docker:  
     needs: update_data

@@ -26,8 +26,4 @@ jobs:
       run: curl https://ip6.03k.org -d" "
     - name: check dnscrypt_resolver
       run: sh dnscrypt_resolver/test.sh
-    - uses: EndBug/add-and-commit@main
-      with:
-        author_name: Github Actions
-        author_email: actions@github.com
-        committer_email: actions@github.com
+    - uses: kkkgo/Git-Commit-Action@main

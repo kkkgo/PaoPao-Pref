@@ -32,11 +32,7 @@ jobs:
         run: docker cp data:/pub/global_mark.dat.sha256sum global_mark.dat.sha256sum
       - name: cp global_mark.dat
         run: docker cp data:/pub/global_mark.dat global_mark.dat
-      - uses: EndBug/add-and-commit@main
-        with:
-         author_name: Github Actions
-         author_email: actions@github.com
-         committer_email: actions@github.com
+      - uses: kkkgo/Git-Commit-Action@main
          
 
 
