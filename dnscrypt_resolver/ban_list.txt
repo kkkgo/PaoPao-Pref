@@ -6,6 +6,7 @@ adfilter-syd
 adfilter-syd-ipv6
 brahma-world
 brahma-world-ipv6
+cisco-doh
 dct-de
 dct-de2
 dct-fr
